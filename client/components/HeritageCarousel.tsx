@@ -34,7 +34,7 @@ const heritagePlaces: HeritagePlace[] = [
     description: "A historic fortified palace that served as the main residence of the Mughal emperors. Known for its impressive red sandstone walls and Indo-Islamic architecture.",
     yearBuilt: "1638-1648",
     visitors: "2-3 million annually", 
-    image: "https://images.unsplash.com/photo-1587474260584-136574528ed5?w=600&h=400&fit=crop",
+  image: "https://img.freepik.com/premium-photo/red-red-fort-delhi-image_181020-130.jpg?semt=ais_incoming&w=740&q=80",
     significance: "Symbol of Mughal power, Independence Day venue"
   },
   {
@@ -56,7 +56,7 @@ const heritagePlaces: HeritagePlace[] = [
     description: "An arch monument built to commemorate the visit of King George V and Queen Mary. Iconic symbol of Mumbai and witness to India's colonial history.",
     yearBuilt: "1924",
     visitors: "3-4 million annually",
-    image: "https://images.unsplash.com/photo-1595658658481-d53213cf27de?w=600&h=400&fit=crop", 
+  image: "https://media.gettyimages.com/id/532038517/photo/gateway-to-india.jpg?s=612x612&w=0&k=20&c=tXI2DM5RotXKph1JX7gfbRevVjMuNfFWD5tch6WnolY=",
     significance: "Colonial heritage, Mumbai's iconic landmark"
   },
   {
@@ -67,7 +67,7 @@ const heritagePlaces: HeritagePlace[] = [
     description: "Official residence of the Wadiyar dynasty and seat of the Kingdom of Mysore. Known for its Indo-Saracenic architecture and magnificent Dussehra celebrations.",
     yearBuilt: "1912",
     visitors: "6 million annually",
-    image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=600&h=400&fit=crop",
+  image: "https://www.savaari.com/blog/wp-content/uploads/2024/01/Mysore_Palace_with_Gardens-1.webp",
     significance: "Royal heritage, architectural fusion, cultural festivals"
   },
   {
@@ -78,7 +78,7 @@ const heritagePlaces: HeritagePlace[] = [
     description: "A 73-meter tall tapering tower of victory, built of red sandstone and marble. Represents the beginning of Muslim rule in India and Indo-Islamic architecture.",
     yearBuilt: "1192-1220",
     visitors: "1.5 million annually",
-    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop",
+  image: "https://www.vacationindia.com/wp-content/uploads/2022/05/50-qutub-minar-complex-new-delhi.jpg",
     significance: "Islamic architecture, victory monument, cultural synthesis"
   }
 ];
@@ -154,15 +154,16 @@ export default function HeritageCarousel() {
                   {/* Image Section */}
                   <div className="relative overflow-hidden">
                     <motion.img
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{ scale: 1.03 }}
                       transition={{ duration: 0.3 }}
                       src={heritagePlaces[currentIndex].image}
                       alt={heritagePlaces[currentIndex].name}
                       className="w-full h-full object-cover"
+                      style={{ objectPosition: 'center 45%' }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <div className="flex items-center gap-2 text-sm">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-4 left-4">
+                      <div className="flex items-center gap-2 text-sm bg-black/40 text-white px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
                         <MapPin className="w-4 h-4" />
                         <span>{heritagePlaces[currentIndex].location}</span>
                       </div>
