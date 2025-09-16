@@ -6,6 +6,7 @@ import HowItWorks from "@/components/HowItWorks";
 import SiteFooter from "@/components/SiteFooter";
 import HeritageCarousel from "@/components/HeritageCarousel";
 import IndianPatternBackground from "@/components/IndianPatternBackground";
+import { useTranslation } from "react-i18next";
 
 function EnhancedCTAButton({ 
   href, 
@@ -105,6 +106,9 @@ function TestimonialCard({
 }
 
 export default function Index() {
+  const { t } = useTranslation();
+  const testimonials = t("testimonials.items", { returnObjects: true }) as Array<any>;
+  const faqs = t("faq.items", { returnObjects: true }) as Array<any>;
   return (
     <main className="landing-hero-bg min-h-screen relative">
       <IndianPatternBackground />
@@ -128,15 +132,12 @@ export default function Index() {
           >
             <div className="space-y-6">
               <h1 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight">
-                Discover Safer Journeys —{" "}
+                {t("hero.titlePrefix")} {" "}
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Explore Confidently
+                  {t("hero.titleHighlight")}
                 </span>
               </h1>
-              <p className="text-lg text-white/85 leading-relaxed max-w-xl">
-                Real-time safety insights, localized advisories and trusted resources to help 
-                travelers and communities make better decisions. Built for tourists, local responders and planners.
-              </p>
+              <p className="text-lg text-white/85 leading-relaxed max-w-xl">{t("hero.description")}</p>
             </div>
             
             <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -145,18 +146,18 @@ export default function Index() {
                 variant="primary"
                 icon={Shield}
               >
-                Get Started
+                {t("cta.getStarted")}
               </EnhancedCTAButton>
               <EnhancedCTAButton 
                 href="/police/dashboard" 
                 variant="secondary"
                 icon={Users}
               >
-                View Live Data
+                {t("cta.viewLive")}
               </EnhancedCTAButton>
             </div>
             
-            <motion.p 
+              <motion.p 
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
@@ -164,7 +165,7 @@ export default function Index() {
               className="text-sm text-white/70 flex items-center gap-2"
             >
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              Supports English and local languages — Real-time monitoring — 24/7 support
+              {t("supportsLine")}
             </motion.p>
           </motion.div>
           
@@ -186,8 +187,8 @@ export default function Index() {
                   <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center mb-3">
                     <Shield className="w-5 h-5 text-green-400" />
                   </div>
-                  <h3 className="font-semibold text-white text-sm">AI Safety Scoring</h3>
-                  <p className="text-xs text-white/70 mt-1">Real-time risk assessment</p>
+                  <h3 className="font-semibold text-white text-sm">{t("features.aiSafety.title")}</h3>
+                  <p className="text-xs text-white/70 mt-1">{t("features.aiSafety.desc")}</p>
                 </motion.div>
                 
                 <motion.div
@@ -197,8 +198,8 @@ export default function Index() {
                   <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center mb-3">
                     <Zap className="w-5 h-5 text-blue-400" />
                   </div>
-                  <h3 className="font-semibold text-white text-sm">Instant Alerts</h3>
-                  <p className="text-xs text-white/70 mt-1">Emergency response system</p>
+                  <h3 className="font-semibold text-white text-sm">{t("features.instantAlerts.title")}</h3>
+                  <p className="text-xs text-white/70 mt-1">{t("features.instantAlerts.desc")}</p>
                 </motion.div>
                 
                 <motion.div
@@ -208,8 +209,8 @@ export default function Index() {
                   <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center mb-3">
                     <Users className="w-5 h-5 text-purple-400" />
                   </div>
-                  <h3 className="font-semibold text-white text-sm">Community Network</h3>
-                  <p className="text-xs text-white/70 mt-1">Connected safety ecosystem</p>
+                  <h3 className="font-semibold text-white text-sm">{t("features.community.title")}</h3>
+                  <p className="text-xs text-white/70 mt-1">{t("features.community.desc")}</p>
                 </motion.div>
                 
                 <motion.div
@@ -219,8 +220,8 @@ export default function Index() {
                   <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center mb-3">
                     <Heart className="w-5 h-5 text-orange-400" />
                   </div>
-                  <h3 className="font-semibold text-white text-sm">Cultural Guidance</h3>
-                  <p className="text-xs text-white/70 mt-1">Local insights & tips</p>
+                  <h3 className="font-semibold text-white text-sm">{t("features.cultural.title")}</h3>
+                  <p className="text-xs text-white/70 mt-1">{t("features.cultural.desc")}</p>
                 </motion.div>
               </div>
               
@@ -228,16 +229,16 @@ export default function Index() {
               <div className="p-6 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 backdrop-blur">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-sm text-white/90 font-medium">Live System Status</span>
+                  <span className="text-sm text-white/90 font-medium">{t("live.statusLabel")}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
                     <div className="text-2xl font-bold text-green-400">99.9%</div>
-                    <div className="text-xs text-white/70">Uptime</div>
+                    <div className="text-xs text-white/70">{t("live.uptime")}</div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-blue-400">&lt; 2s</div>
-                    <div className="text-xs text-white/70">Response Time</div>
+                    <div className="text-xs text-white/70">{t("live.responseTime")}</div>
                   </div>
                 </div>
               </div>
@@ -255,10 +256,8 @@ export default function Index() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl text-white font-bold mb-4">Why people trust us</h2>
-            <p className="text-white/70 max-w-2xl mx-auto">
-              Trusted by thousands of travelers and supported by government authorities
-            </p>
+            <h2 className="text-3xl text-white font-bold mb-4">{t("trust.title")}</h2>
+            <p className="text-white/70 max-w-2xl mx-auto">{t("trust.subtitle")}</p>
           </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -292,31 +291,20 @@ export default function Index() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl text-white font-bold mb-4">What travellers say</h2>
-          <p className="text-white/70 max-w-2xl mx-auto">
-            Real experiences from tourists and responders using our platform
-          </p>
+            <h2 className="text-3xl text-white font-bold mb-4">{t("testimonials.title")}</h2>
+            <p className="text-white/70 max-w-2xl mx-auto">{t("testimonials.subtitle")}</p>
         </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <TestimonialCard
-            quote="The live map helped me choose safer routes every day — super handy and easy to use. I felt much more confident exploring new places."
-            author="Asha"
-            role="International Tourist"
-            delay={0}
-          />
-          <TestimonialCard
-            quote="Local alerts were clear and timely — improved coordination for our team. The real-time updates made our response much more effective."
-            author="Inspector R."
-            role="Local Law Enforcement"
-            delay={0.1}
-          />
-          <TestimonialCard
-            quote="The bilingual labels are a lifesaver for communicating with locals. My clients love the cultural sensitivity and safety features."
-            author="Marco"
-            role="Professional Tour Guide"
-            delay={0.2}
-          />
+          {testimonials.map((tItem, idx) => (
+            <TestimonialCard
+              key={idx}
+              quote={tItem.quote}
+              author={tItem.author}
+              role={tItem.role}
+              delay={idx * 0.1}
+            />
+          ))}
         </div>
       </section>
 
@@ -329,29 +317,12 @@ export default function Index() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl text-white font-bold mb-4">Frequently asked questions</h2>
-            <p className="text-white/70">Everything you need to know about YatraRakshak</p>
+            <h2 className="text-3xl text-white font-bold mb-4">{t("faq.title")}</h2>
+            <p className="text-white/70">{t("faq.subtitle")}</p>
           </motion.div>
           
           <div className="space-y-6 text-white/90">
-            {[
-              {
-                question: "Is the data verified?",
-                answer: "We aggregate from official sources and community reports; critical alerts are escalated through partner channels and verified by government authorities."
-              },
-              {
-                question: "Can I contribute local updates?",
-                answer: "Yes — community reporting tools are available in the app and reviewed before publish. We value local insights while maintaining data quality."
-              },
-              {
-                question: "Which languages are supported?",
-                answer: "English and Hindi for full interface, with local languages for place names. More languages planned based on demand and community feedback."
-              },
-              {
-                question: "How secure is my data?",
-                answer: "We use blockchain technology for identity verification and AI for anonymized safety scoring. Your personal data is encrypted and never shared without consent."
-              }
-            ].map((faq, index) => (
+            {faqs.map((faq, index) => (
               <motion.div
                 key={faq.question}
                 initial={{ opacity: 0, y: 20 }}

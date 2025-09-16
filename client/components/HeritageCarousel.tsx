@@ -86,12 +86,15 @@ const heritagePlaces: HeritagePlace[] = [
 export default function HeritageCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  // direction: 1 = next (enter from right), -1 = prev (enter from left)
+  const [direction, setDirection] = useState(1);
 
   // Auto-slide functionality
   useEffect(() => {
     if (!isAutoPlaying) return;
     
     const interval = setInterval(() => {
+      setDirection(1);
       setCurrentIndex((prev) => (prev + 1) % heritagePlaces.length);
     }, 4000);
 
@@ -99,14 +102,18 @@ export default function HeritageCarousel() {
   }, [isAutoPlaying]);
 
   const nextSlide = () => {
+    setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % heritagePlaces.length);
   };
 
   const prevSlide = () => {
+    setDirection(-1);
     setCurrentIndex((prev) => (prev - 1 + heritagePlaces.length) % heritagePlaces.length);
   };
 
   const goToSlide = (index: number) => {
+    if (index === currentIndex) return;
+    setDirection(index > currentIndex ? 1 : -1);
     setCurrentIndex(index);
   };
 
@@ -137,9 +144,9 @@ export default function HeritageCarousel() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
-                initial={{ opacity: 0, x: 300 }}
+                initial={{ opacity: 0, x: direction > 0 ? 300 : -300 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -300 }}
+                exit={{ opacity: 0, x: direction > 0 ? -300 : 300 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="absolute inset-0"
               >
