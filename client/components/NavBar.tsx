@@ -24,7 +24,7 @@ export default function NavBar() {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur border-b border-white/10 bg-background/60">
+    <header className="sticky top-0 z-40 backdrop-blur-md border-b border-border/20 bg-background/30">
       <div className="container mx-auto flex items-center justify-between py-3 mobile-padding">
         <Link to="/" className="flex items-center gap-2" aria-label="YatraRakshak — Home">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -100,7 +100,7 @@ export default function NavBar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden border-t border-white/10 bg-background/95 backdrop-blur"
+            className="md:hidden border-t border-border/20 bg-background/40 backdrop-blur-md"
           >
             <nav className="container mx-auto mobile-padding py-4 space-y-2">
               <NavLink 
@@ -131,7 +131,7 @@ export default function NavBar() {
               >
                 {t("nav.admin")}
               </NavLink>
-              <div className="pt-2 border-t border-white/10">
+              <div className="pt-2 border-t border-border/20">
                 <Link 
                   to="/auth/login" 
                   className="block w-full text-center px-4 py-3 rounded-lg bg-primary text-primary-foreground font-medium transition-colors"
