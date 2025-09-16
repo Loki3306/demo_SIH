@@ -203,9 +203,9 @@ export default function HeritageCarousel() {
                     </div>
 
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="self-start px-6 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-medium transition-all duration-300 hover:shadow-lg"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="self-start px-6 py-2 bg-white/60 backdrop-blur-sm text-primary rounded-lg font-medium border-2 border-primary transition-all duration-200 hover:shadow-md"
                     >
                       Explore More
                     </motion.button>
@@ -218,18 +218,18 @@ export default function HeritageCarousel() {
           {/* Navigation Controls */}
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full text-white transition-all duration-200 hover:scale-110"
+            className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full text-primary shadow-lg border border-white/30 transition-all duration-200 hover:scale-105"
             aria-label="Previous heritage site"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
 
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white/30 backdrop-blur rounded-full text-white transition-all duration-200 hover:scale-110"
+            className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full text-primary shadow-lg border border-white/30 transition-all duration-200 hover:scale-105"
             aria-label="Next heritage site"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-6 h-6" />
           </button>
 
           {/* Dots Indicator */}
