@@ -2,6 +2,7 @@ import SafetyScoreCard from "@/components/SafetyScoreCard";
 import PanicButton from "@/components/PanicButton";
 import MapLive from "@/components/MapLive";
 import AlertsFeed from "@/components/AlertsFeed";
+import UploadBox from "@/components/UploadBox";
 
 export default function TouristDashboard() {
   const userId = "t123";
@@ -16,6 +17,7 @@ export default function TouristDashboard() {
       </div>
       <div>
         <AlertsFeed />
+        <UploadBox />
       </div>
     </main>
   );
