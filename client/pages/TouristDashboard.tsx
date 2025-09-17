@@ -17,7 +17,9 @@ export default function TouristDashboard() {
       </div>
       <div>
         <AlertsFeed />
-        <UploadBox />
+        <div className="mt-4">
+          <UploadBox />
+        </div>
       </div>
     </main>
   );
