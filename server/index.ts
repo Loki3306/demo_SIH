@@ -29,11 +29,15 @@ type Tourist = {
   documentType?: "aadhaar" | "passport";
   documentNumber?: string;
   documentFileName?: string;
-  verificationStatus: "pending" | "verified" | "rejected";
+  verificationStatus: "pending" | "verified" | "rejected" | "archived";
+  // audit history for admin actions
+  history?: { action: string; admin?: string; notes?: string; timestamp: string }[];
   blockchainId?: string;
   applicationDate?: string;
 };
 let tourists: Tourist[] = [];
+// Simple in-memory activity log for admin actions (dev only)
+let adminLogs: { userId: string; action: string; admin?: string; notes?: string; timestamp: string }[] = [];
 
 function loadSeedData() {
   try {
@@ -41,6 +45,25 @@ function loadSeedData() {
     if (fs.existsSync(seedPath)) {
       const raw = fs.readFileSync(seedPath, "utf-8");
       tourists = JSON.parse(raw);
+      // Populate adminLogs from any history present in seed data
+      adminLogs = [];
+      for (const t of tourists) {
+        if (Array.isArray(t.history)) {
+          for (const h of t.history) {
+            adminLogs.push({
+              userId: t._id,
+              action: h.action ?? "unknown",
+              admin: h.admin,
+              notes: h.notes,
+              timestamp: h.timestamp ?? new Date().toISOString(),
+            });
+          }
+        }
+      }
+      // If no logs were present in seed data, add a small sample entry for dev UX
+      if (adminLogs.length === 0 && tourists.length > 0) {
+        adminLogs.push({ userId: tourists[0]._id, action: 'seeded', admin: 'system', notes: 'Seeded admin log entry', timestamp: new Date().toISOString() });
+      }
     }
   } catch (e) {
     // ignore seed load errors in dev
@@ -143,12 +166,37 @@ export function createServer() {
 
   // Admin verification APIs
   app.get("/api/admin/pending-verifications", (_req, res) => {
-    const pending = tourists.filter((t) => t.verificationStatus === "pending");
-    res.json({ data: pending });
+    // support optional status filter via query param ?status=pending|verified|rejected|archived|all
+    // and optional search query ?q= to match name or email (case-insensitive)
+    const status = String(_req.query.status ?? "pending").toLowerCase();
+    const q = String(_req.query.q ?? "").trim().toLowerCase();
+    let result: Tourist[];
+    if (status === "all") {
+      result = tourists.slice();
+    } else {
+      result = tourists.filter((t) => t.verificationStatus === status);
+    }
+    if (q) {
+      result = result.filter((t) => {
+        const name = (t.name ?? "").toLowerCase();
+        const email = (t.email ?? "").toLowerCase();
+        return name.includes(q) || email.includes(q);
+      });
+    }
+
+    // pagination
+    const page = Math.max(1, parseInt(String(_req.query.page ?? "1"), 10) || 1);
+    const perPage = Math.max(1, Math.min(100, parseInt(String(_req.query.perPage ?? "10"), 10) || 10));
+    const total = result.length;
+    const start = (page - 1) * perPage;
+    const paged = result.slice(start, start + perPage);
+    res.json({ data: paged, total });
   });
 
   app.post("/api/admin/approve/:userId", async (req, res) => {
     const { userId } = req.params;
+    const notes = (req.body && (req.body.notes as string)) ?? undefined;
+    const admin = (req.headers['x-admin'] as string) ?? 'admin-dev';
     const t = tourists.find((x) => x._id === userId);
     if (!t) return res.status(404).json({ error: "not_found" });
     try {
@@ -160,6 +208,10 @@ export function createServer() {
       const json = await r.json();
       t.blockchainId = json?.blockchainId ?? `bc_${userId}`;
       t.verificationStatus = "verified";
+      // append history
+  t.history = t.history ?? [];
+  t.history.push({ action: 'approved', admin, notes, timestamp: new Date().toISOString() });
+  adminLogs.push({ userId: userId, action: 'approved', admin, notes, timestamp: new Date().toISOString() });
       return res.json({ success: true, blockchainId: t.blockchainId });
     } catch (e: any) {
       return res.status(502).json({ error: "blockchain_error", details: e?.message });
@@ -168,10 +220,53 @@ export function createServer() {
 
   app.post("/api/admin/reject/:userId", (req, res) => {
     const { userId } = req.params;
+    const notes = (req.body && (req.body.notes as string)) ?? undefined;
+    const admin = (req.headers['x-admin'] as string) ?? 'admin-dev';
     const t = tourists.find((x) => x._id === userId);
     if (!t) return res.status(404).json({ error: "not_found" });
     t.verificationStatus = "rejected";
+    t.history = t.history ?? [];
+    t.history.push({ action: 'rejected', admin, notes, timestamp: new Date().toISOString() });
+    adminLogs.push({ userId: userId, action: 'rejected', admin, notes, timestamp: new Date().toISOString() });
     res.json({ success: true });
+  });
+
+  // Archive an application (mark as archived)
+  app.post("/api/admin/archive/:userId", (req, res) => {
+    const { userId } = req.params;
+    const admin = (req.headers['x-admin'] as string) ?? 'admin-dev';
+    const notes = (req.body && (req.body.notes as string)) ?? undefined;
+    const t = tourists.find((x) => x._id === userId);
+    if (!t) return res.status(404).json({ error: "not_found" });
+    t.verificationStatus = 'archived';
+    t.history = t.history ?? [];
+    t.history.push({ action: 'archived', admin, notes, timestamp: new Date().toISOString() });
+    adminLogs.push({ userId: userId, action: 'archived', admin, notes, timestamp: new Date().toISOString() });
+    res.json({ success: true });
+  });
+
+  // Admin activity logs
+  app.get('/api/admin/logs', (_req, res) => {
+    res.json({ data: adminLogs.slice().reverse() });
+  });
+
+  // Admin-only document retrieval (simple header-based check for demo)
+  app.get("/api/admin/document/:userId", (req, res) => {
+    const adminKey = req.headers['x-admin-key'];
+    // In production use proper auth; here we allow if header present or in dev env
+    if (!adminKey && process.env.NODE_ENV === 'production') return res.status(401).json({ error: 'unauthorized' });
+    const { userId } = req.params;
+    const t = tourists.find((x) => x._id === userId);
+    if (!t) return res.status(404).json({ error: 'not_found' });
+    if (!t.documentFileName) return res.status(404).json({ error: 'no_document' });
+    // Try seed_data folder or public uploads folder
+    const possiblePaths = [
+      path.join(process.cwd(), 'seed_data', t.documentFileName),
+      path.join(process.cwd(), 'public', 'uploads', t.documentFileName),
+    ];
+    const found = possiblePaths.find((p) => fs.existsSync(p));
+    if (!found) return res.status(404).json({ error: 'document_not_found' });
+    res.sendFile(found);
   });
 
   // Bridge proxies

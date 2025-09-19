@@ -1,29 +1,127 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { formatDateDDMMYYYY } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import AdminTouristDetail from "@/components/AdminTouristDetail";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Link } from "react-router-dom";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { IdCard, CheckCircle, XCircle, Clock, FileText, Home, Users, Settings, LogOut } from "lucide-react";
 
 type Applicant = {
   _id: string;
   name: string;
   email: string;
   documentType?: string;
+  // older seed data uses `kyc.type` instead of documentType
+  kyc?: { type?: string };
   documentNumber?: string;
   applicationDate?: string;
+  verificationStatus?: "pending" | "verified" | "rejected" | "archived";
 };
 
 export default function Admin() {
   const [items, setItems] = useState<Applicant[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPending, setTotalPending] = useState<number | null>(null);
+  const [applicationsToday, setApplicationsToday] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const perPage = 10;
+  const [selected, setSelected] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "pending" | "verified" | "rejected" | "archived" | "all"
+  >("pending");
 
-  async function load() {
+  // load data; allow optional overrides so we can trigger a search immediately
+  async function load(opts?: { page?: number; status?: typeof statusFilter; query?: string }) {
     setLoading(true);
-    const r = await fetch("/api/admin/pending-verifications");
+    const useStatus = opts?.status ?? statusFilter;
+    const usePage = opts?.page ?? page;
+    const useQuery = opts?.query ?? query;
+    const params = new URLSearchParams();
+    params.set("status", useStatus);
+    params.set("page", String(usePage));
+    params.set("perPage", String(perPage));
+    if ((useQuery ?? "").trim()) params.set("q", (useQuery ?? "").trim());
+    const r = await fetch(`/api/admin/pending-verifications?${params.toString()}`);
     const json = await r.json();
     setItems(json.data ?? []);
+    setTotal(json.total ?? 0);
     setLoading(false);
+  }
+
+  // debounce timer for search input
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerSearch = (q?: string) => {
+    // reset to first page when searching
+    const queryValue = q ?? query;
+    setPage(1);
+    // call load with overrides so we don't have to wait for setPage to flush
+    load({ page: 1, query: queryValue });
+  };
+
+  async function loadMetrics() {
+    try {
+      // total pending (use perPage=1 to get total fast)
+      const r1 = await fetch(
+        `/api/admin/pending-verifications?status=pending&perPage=1&page=1`
+      );
+      const j1 = await r1.json();
+      setTotalPending(j1.total ?? 0);
+
+      // applications today - fetch all tourists (dev only) and count applicationDate in same day
+      const r2 = await fetch(`/api/tourists`);
+      const j2 = await r2.json();
+      const all: any[] = j2.data ?? [];
+      const today = new Date();
+      const startOfDay = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+      );
+      const countToday = all.filter((t) => {
+        const d = new Date(t.applicationDate ?? t.createdAt ?? 0);
+        return d >= startOfDay;
+      }).length;
+      setApplicationsToday(countToday);
+    } catch (e) {
+      // ignore metric errors in dev
+    }
   }
 
   useEffect(() => {
     load();
+  }, [page, statusFilter]);
+
+  useEffect(() => {
+    // refresh metrics on mount
+    loadMetrics();
   }, []);
 
   async function approve(id: string) {
@@ -36,42 +134,198 @@ export default function Admin() {
     if (r.ok) await load();
   }
 
+  async function archive(id: string) {
+    const r = await fetch(`/api/admin/archive/${id}`, { method: "POST" });
+    if (r.ok) await load();
+  }
+
   return (
-    <main className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-4">Pending Verifications</h1>
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-foreground/5">
-            <tr>
-              <th className="text-left px-4 py-2">Tourist Name</th>
-              <th className="text-left px-4 py-2">Email</th>
-              <th className="text-left px-4 py-2">Document Type</th>
-              <th className="text-left px-4 py-2">Application Date</th>
-              <th className="text-left px-4 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td className="px-4 py-6" colSpan={5}>Loading...</td></tr>
-            ) : items.length === 0 ? (
-              <tr><td className="px-4 py-6" colSpan={5}>No pending applications.</td></tr>
-            ) : (
-              items.map((a) => (
-                <tr key={a._id} className="border-t border-white/10">
-                  <td className="px-4 py-2">{a.name}</td>
-                  <td className="px-4 py-2">{a.email}</td>
-                  <td className="px-4 py-2 capitalize">{a.documentType ?? "-"}</td>
-                  <td className="px-4 py-2">{a.applicationDate ? new Date(a.applicationDate).toLocaleString() : "-"}</td>
-                  <td className="px-4 py-2 flex gap-2">
-                    <Button size="sm" onClick={() => approve(a._id)}>Approve</Button>
-                    <Button size="sm" variant="outline" onClick={() => reject(a._id)}>Reject</Button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </main>
+    <>
+      <main className="container mx-auto py-8">
+          <div className="w-full">
+              <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Total Pending</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-semibold">{totalPending ?? items.filter(i => i.verificationStatus === 'pending').length}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Applications Today</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-semibold">{applicationsToday ?? '-'}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Avg Approval Time</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-semibold">-</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="rounded-2xl border border-white/6 bg-background/60 backdrop-blur overflow-hidden">
+                <div className="p-4 border-b border-white/6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <div className="relative w-full sm:w-64">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/60">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
+                            <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.5" />
+                          </svg>
+                        </span>
+                        <input
+                          value={query}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setQuery(v);
+                            if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+                            searchTimerRef.current = setTimeout(() => {
+                              triggerSearch(v);
+                            }, 300);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              if (searchTimerRef.current) {
+                                clearTimeout(searchTimerRef.current);
+                                searchTimerRef.current = null;
+                              }
+                              triggerSearch((e.currentTarget as HTMLInputElement).value);
+                            }
+                          }}
+                          onBlur={(e) => {
+                            if (searchTimerRef.current) {
+                              clearTimeout(searchTimerRef.current);
+                              searchTimerRef.current = null;
+                            }
+                            triggerSearch((e.currentTarget as HTMLInputElement).value);
+                          }}
+                          placeholder="Search by name or email"
+                          className="h-10 pl-10 pr-3 rounded-md border bg-background/50 w-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0"
+                        />
+                      </div>
+                      <div className="relative inline-block w-48">
+                        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+                          <SelectTrigger aria-label="Filter by status" className="w-full">
+                            <SelectValue placeholder="All" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="verified">Verified</SelectItem>
+                            <SelectItem value="rejected">Rejected</SelectItem>
+                            <SelectItem value="archived">Archived</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {/* Apply button removed — search triggers on Enter, blur, or after typing (debounced) */}
+                    </div>
+                    <div className="text-sm text-foreground/70">Showing: <span className="font-medium capitalize">{statusFilter}</span></div>
+                  </div>
+                </div>
+
+                <Table>
+                  <TableHeader>
+                    <tr>
+                      <TableHead>Tourist</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Document</TableHead>
+                      <TableHead>Applied</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </tr>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow><TableCell colSpan={6}>Loading...</TableCell></TableRow>
+                    ) : items.length === 0 ? (
+                      <TableRow><TableCell colSpan={6}>No applications for {statusFilter}.</TableCell></TableRow>
+                    ) : (
+                      items.map((a) => (
+                        <TableRow key={a._id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="flex flex-col">
+                                <span className="font-medium">{a.name}</span>
+                                <span className="text-xs text-muted-foreground">{a._id}</span>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {a.verificationStatus === 'pending' && <Clock className="h-4 w-4 text-yellow-500" />}
+                              {a.verificationStatus === 'verified' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                              {a.verificationStatus === 'rejected' && <XCircle className="h-4 w-4 text-red-500" />}
+                              <Badge variant={a.verificationStatus === 'pending' ? 'outline' : a.verificationStatus === 'verified' ? 'default' : 'destructive'} className="ml-1 capitalize">{a.verificationStatus ?? '-'}</Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell>{a.email}</TableCell>
+                          <TableCell>
+                              <div className="flex items-center gap-2">
+                                {/* Use document type icons for clarity */}
+                                {(((a.documentType ?? (a as any).kyc?.type) || '') as string).toLowerCase().includes('passport') ? (
+                                  <IdCard className="h-4 w-4" />
+                                ) : (
+                                  <IdCard className="h-4 w-4" />
+                                )}
+                                <span className="capitalize">{a.documentType ?? (a as any).kyc?.type ?? '-'}</span>
+                              </div>
+                          </TableCell>
+                          <TableCell>{a.applicationDate ? formatDateDDMMYYYY(a.applicationDate) : '-'}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="ghost" onClick={() => { setSelected(a._id); setDetailOpen(true); }}>View</Button>
+                              {((a.documentType ?? (a as any).kyc?.type) && a.verificationStatus === 'pending') && (
+                                <Button size="sm" variant="default" onClick={() => approve(a._id)}>Approve</Button>
+                              )}
+                              {a.verificationStatus === 'pending' && (
+                                <Button size="sm" variant="outline" onClick={() => reject(a._id)}>Reject</Button>
+                              )}
+                              {(a.verificationStatus === 'verified' || a.verificationStatus === 'rejected') && (
+                                <Button size="sm" variant="ghost" onClick={() => archive(a._id)}>Archive</Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+
+                <div className="p-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious onClick={() => setPage(Math.max(1, page - 1))} aria-disabled={page <= 1} />
+                      </PaginationItem>
+                      {/* Simple numeric pages */}
+                      {Array.from({ length: Math.max(1, Math.ceil(total / perPage)) }).map((_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink isActive={page === i + 1} onClick={() => setPage(i + 1)}>{i + 1}</PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext onClick={() => setPage(Math.min(Math.max(1, Math.ceil(total / perPage)), page + 1))} aria-disabled={page >= Math.ceil(total / perPage)} />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              </div>
+          </div>
+      </main>
+      <AdminTouristDetail
+        userId={selected}
+        open={detailOpen}
+        onOpenChange={(v) => setDetailOpen(v)}
+        onDone={() => load()}
+      />
+    </>
   );
 }

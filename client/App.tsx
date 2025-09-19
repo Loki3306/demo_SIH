@@ -11,10 +11,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import NavBar from "@/components/NavBar";
+import NavBar, { NavBarSlideHandle } from "@/components/NavBar";
 import TouristDashboard from "@/pages/TouristDashboard";
 import PoliceDashboard from "@/pages/PoliceDashboard";
 import Admin from "@/pages/Admin";
+import AdminLogs from "@/pages/AdminLogs";
 import AuthLogin from "@/pages/AuthLogin";
 import AuthRegister from "@/pages/AuthRegister";
 import LegalPrivacy from "@/pages/LegalPrivacy";
@@ -31,11 +32,13 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <NavBar />
+            <NavBarSlideHandle />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/tourist/dashboard" element={<TouristDashboard />} />
               <Route path="/police/dashboard" element={<PoliceDashboard />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/logs" element={<AdminLogs />} />
               <Route path="/auth/login" element={<AuthLogin />} />
               <Route path="/auth/register" element={<AuthRegister />} />
               <Route path="/legal/privacy" element={<LegalPrivacy />} />

@@ -1,6 +1,7 @@
 
 /** @import must precede all other statements */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 @import url("./components/map-hero.css");
 
@@ -99,6 +100,48 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+}
+
+/* Sidebar font and spacing tweaks */
+[data-sidebar="sidebar"] {
+  font-family: 'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+[data-sidebar="menu"] [data-sidebar="menu-button"] {
+  letter-spacing: 0.02em; /* slightly wider spacing */
+}
+
+/* Stronger spacing utility for sidebar labels */
+/* sidebar menu label: modest spacing and comfortable line-height so labels wrap naturally */
+[data-sidebar="menu"] [data-sidebar="menu-button"] span {
+  letter-spacing: 0.01em;
+  word-spacing: normal;
+  font-weight: 500;
+  font-size: 0.98rem;
+  color: hsl(var(--sidebar-foreground));
+  line-height: 1.6; /* increased vertical spacing for readability */
+  white-space: normal; /* allow wrapping */
+  overflow-wrap: anywhere;
+}
+
+/* Ensure icons have consistent spacing from labels */
+[data-sidebar="menu"] [data-sidebar="menu-button"] svg {
+  margin-right: 0.5rem;
+}
+
+/* Add modest vertical padding to menu buttons so multi-line labels have breathing room */
+[data-sidebar="menu"] [data-sidebar="menu-button"] {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+
+/* Stronger specificity to override other styles that made menu labels oversized */
+[data-sidebar="sidebar"] [data-sidebar="menu"] [data-sidebar="menu-button"] {
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.01em !important;
 }
 
 @layer base {
@@ -457,3 +500,76 @@
     transition: transform 0.2s ease;
   }
 }
+
+/* Custom scrollbar for dialogs and card content */
+.ui-scrollbar {
+  /* Firefox: subtle, thin scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.35) rgba(0,0,0,0.03);
+  /* Reserve space for scrollbar to avoid layout shift */
+  scrollbar-gutter: stable both-edges;
+}
+.ui-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.ui-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+}
+.ui-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.22);
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,0.03);
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,0.02);
+}
+.ui-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.35);
+}
+
+/* Ensure dialog content scroll area leaves room for the scrollbar to the right */
+.dialog-content .ui-scrollbar {
+  padding-right: 8px; /* space to prevent overlap with scrollbar */
+}
+
+/* Dialog header divider and subtitle spacing */
+.dialog-header-divider { border-top: 1px solid rgba(0,0,0,0.06); margin-top: 8px; }
+.dialog-subtitle { color: rgba(100,100,110,0.9); }
+
+  /* Sidebar active indicator */
+  [data-sidebar="menu"] [data-sidebar="menu-item"] [data-active="true"] {
+    position: relative;
+  }
+  [data-sidebar="menu"] [data-sidebar="menu-item"] [data-active="true"]::before {
+    content: '';
+    position: absolute;
+    left: 0.25rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 4px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, hsl(var(--primary) / 1), hsl(var(--secondary) / 1));
+  }
+
+/* Glass-like header for dialogs */
+.dialog-header {
+  background: linear-gradient(180deg, rgba(255,255,255,0.38), rgba(255,255,255,0.28));
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 24px rgba(13, 17, 23, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .dialog-header {
+    background: linear-gradient(180deg, rgba(10,12,14,0.36), rgba(10,12,14,0.24));
+    border: 1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 8px 28px rgba(2,6,23,0.5);
+  }
+}
+
+/* Dialog scroll area handled by flex layout in component: DialogContent uses flex and the middle content uses flex-1 */
+/* Visible drag handle on dialog right edge for clarity / fallback */
+/* drag handle removed from markup; previous styles intentionally omitted */
