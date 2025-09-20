@@ -31,21 +31,26 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <NavBar />
-            <NavBarSlideHandle />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/tourist/dashboard" element={<TouristDashboard />} />
-              <Route path="/police/dashboard" element={<PoliceDashboard />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/logs" element={<AdminLogs />} />
-              <Route path="/auth/login" element={<AuthLogin />} />
-              <Route path="/auth/register" element={<AuthRegister />} />
-              <Route path="/legal/privacy" element={<LegalPrivacy />} />
-              <Route path="/legal/terms" element={<LegalTerms />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <div className="min-h-screen md:flex">
+              <NavBar />
+              <NavBarSlideHandle />
+              {/* Main content area; on desktop the sidebar occupies fixed width and this will flex to fill rest */}
+              <main className="flex-1 min-h-screen pt-6 md:pt-8">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/tourist/dashboard" element={<TouristDashboard />} />
+                  <Route path="/police/dashboard" element={<PoliceDashboard />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/admin/logs" element={<AdminLogs />} />
+                  <Route path="/auth/login" element={<AuthLogin />} />
+                  <Route path="/auth/register" element={<AuthRegister />} />
+                  <Route path="/legal/privacy" element={<LegalPrivacy />} />
+                  <Route path="/legal/terms" element={<LegalTerms />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+            </div>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>

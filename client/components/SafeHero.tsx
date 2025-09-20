@@ -101,7 +101,7 @@ export default function SafeHero() {
         ))}
       </div>
 
-      <div className="container mx-auto grid lg:grid-cols-2 gap-10 items-center py-16 md:py-24 relative z-10">
+  <div className="container mx-auto grid lg:grid-cols-2 gap-10 items-center py-8 md:py-12 relative z-10">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}

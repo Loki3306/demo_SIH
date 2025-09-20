@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { IdCard, CheckCircle, XCircle, Clock, FileText, Home, Users, Settings, LogOut } from "lucide-react";
+import { IdCard, CheckCircle, XCircle, Clock, FileText, Home, Users, Settings } from "lucide-react";
 
 type Applicant = {
   _id: string;
@@ -141,7 +141,7 @@ export default function Admin() {
 
   return (
     <>
-      <main className="container mx-auto py-8">
+      <main className="container mx-auto py-8 px-6">
           <div className="w-full">
               <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card>
@@ -231,6 +231,7 @@ export default function Admin() {
                   </div>
                 </div>
 
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <tr>
@@ -298,6 +299,7 @@ export default function Admin() {
                     )}
                   </TableBody>
                 </Table>
+                </div>
 
                 <div className="p-4">
                   <Pagination>

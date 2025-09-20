@@ -203,7 +203,7 @@ export default function Index() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <main className="landing-hero-bg min-h-screen relative">
+  <main className="landing-hero-bg min-h-screen relative -mt-6 md:-mt-8">
       <IndianPatternBackground />
       <div className="relative z-10">
         <SafeHero />

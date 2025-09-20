@@ -194,6 +194,87 @@
   .card-mobile {
     @apply p-4 sm:p-6 rounded-xl border border-white/10 bg-white/5 backdrop-blur;
   }
+
+  /* Translucent sidebar (glass) */
+  .sidebar-glass {
+    /* Use the sidebar color token but make it translucent and apply stronger blur */
+    background-color: hsl(var(--sidebar-background) / 0.78);
+    /* subtle glossy gradient on top of the translucent base */
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 6px 20px rgba(2,6,23,0.06);
+    /* hide the hard border; we'll draw a softer inner edge with a pseudo-element */
+    border-right: 1px solid transparent;
+    position: relative; /* allow ::after inner edge */
+  }
+
+  /* Slightly stronger glass for handles and elevated controls */
+  .sidebar-glass-strong {
+    background-color: hsl(var(--sidebar-background) / 0.88);
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
+    box-shadow: 0 8px 28px rgba(2,6,23,0.08);
+    border-right: 1px solid transparent;
+    position: relative;
+  }
+
+  /* Slide handle variant (rounded & hover feedback) */
+  .sidebar-slide-handle {
+    @apply rounded-r-md p-2 shadow-md transition-opacity;
+    background-color: hsl(var(--sidebar-background) / 0.9);
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid transparent;
+    /* slightly overlap the sidebar to hide any seam */
+    transform: translateX(6px);
+    z-index: 1260; /* stay above the sidebar */
+  }
+
+  /* soft inner edge for the sidebar to avoid a harsh seam */
+  .sidebar-glass::after,
+  .sidebar-glass-strong::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.06), rgba(255,255,255,0.02) 20%, rgba(0,0,0,0.08) 80%, rgba(0,0,0,0.04));
+    mix-blend-mode: overlay;
+  }
+
+  /* Fallback for browsers that don't support backdrop-filter: prefer a slightly more solid bg */
+  @supports not ((-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))) {
+    .sidebar-glass,
+    .sidebar-glass-strong,
+    .sidebar-slide-handle {
+      /* reduce transparency so it still reads as a distinct panel without blur */
+      background-image: none;
+      background-color: hsl(var(--sidebar-background) / 0.96);
+      box-shadow: 0 2px 8px rgba(2,6,23,0.06);
+      border-right: 1px solid hsl(var(--sidebar-border) / 0.5);
+    }
+  }
+
+  /* Dark mode adjustments for translucency */
+  .dark .sidebar-glass {
+    background-color: hsl(var(--sidebar-background) / 0.5);
+    border-right-color: hsl(var(--sidebar-border) / 0.32);
+  }
+
+  .dark .sidebar-glass-strong {
+    background-color: hsl(var(--sidebar-background) / 0.64);
+    border-right-color: hsl(var(--sidebar-border) / 0.42);
+  }
+
+  .dark .sidebar-slide-handle {
+    background-color: hsl(var(--sidebar-background) / 0.7);
+    border-color: hsl(var(--sidebar-border) / 0.35);
+  }
   
   /* Text utilities */
   .line-clamp-4 {
