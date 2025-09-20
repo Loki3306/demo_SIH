@@ -1,0 +1,43 @@
+{
+  "name": "tourist-digital-id-blockchain",
+  "version": "1.0.0",
+  "description": "Blockchain infrastructure for tourist digital ID creation using Ganache and Hardhat",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "deploy": "npx hardhat run scripts/deploy.js --network ganache",
+    "deploy:test": "npx hardhat run scripts/deploy.js --network hardhat",
+    "seed": "npx hardhat run scripts/seed-data.js --network ganache",
+    "migrate": "npx hardhat run scripts/migrate-from-mock.js --network ganache",
+    "test": "npx hardhat test",
+    "clean": "npx hardhat clean",
+    "start": "node ganacheService.js",
+    "dev": "nodemon ganacheService.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "qrcode": "^1.5.4",
+    "web3": "^1.10.4"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "@types/mocha": "^10.0.0",
+    "chai": "^4.4.1",
+    "ethers": "^6.4.0",
+    "hardhat": "^2.22.0",
+    "hardhat-gas-reporter": "^1.0.8",
+    "nodemon": "^3.1.7",
+    "solidity-coverage": "^0.8.1",
+    "ts-node": "^10.0.0",
+    "typechain": "^8.3.0"
+  }
+}

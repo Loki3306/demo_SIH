@@ -60,6 +60,7 @@ export default function NavBar() {
             <NavLink to="/tourist/dashboard" className={navItem}>{t("nav.tourist")}</NavLink>
             <NavLink to="/police/dashboard" className={navItem}>{t("nav.police")}</NavLink>
             <NavLink to="/admin" className={navItem}>{t("nav.admin")}</NavLink>
+            <NavLink to="/profile" className={navItem}>My Profile</NavLink>
           </nav>
         ) : (
           <div className="hidden md:flex items-center">
@@ -165,6 +166,13 @@ export default function NavBar() {
                 onClick={closeMobileMenu}
               >
                 {t("nav.admin")}
+              </NavLink>
+              <NavLink 
+                to="/profile" 
+                className={mobileNavItem}
+                onClick={closeMobileMenu}
+              >
+                My Profile
               </NavLink>
               <div className="pt-2 border-t border-border/20">
                 <Link 

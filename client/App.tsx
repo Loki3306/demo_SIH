@@ -18,6 +18,7 @@ import Admin from "@/pages/Admin";
 import AdminLogs from "@/pages/AdminLogs";
 import AuthLogin from "@/pages/AuthLogin";
 import AuthRegister from "@/pages/AuthRegister";
+import MyProfile from "@/pages/MyProfile";
 import LegalPrivacy from "@/pages/LegalPrivacy";
 import LegalTerms from "@/pages/LegalTerms";
 
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/admin/logs" element={<AdminLogs />} />
               <Route path="/auth/login" element={<AuthLogin />} />
               <Route path="/auth/register" element={<AuthRegister />} />
+              <Route path="/profile" element={<MyProfile />} />
               <Route path="/legal/privacy" element={<LegalPrivacy />} />
               <Route path="/legal/terms" element={<LegalTerms />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,81 +1,141 @@
 [
   {
     "_id": "t123",
-    "name": "Alice Kumar",
-    "email": "alice@example.com",
-    "phone": "+91-9812345678",
-    "kyc": { "type": "passport", "number_hash": "sha256:abc" },
-    "blockchainId": "bc_0xabc123",
+    "name": "Arjun Kumar",
+    "email": "arjun.kumar@email.com",
+    "phone": "+91 98765 43210",
+    "itinerary": "Planning to visit Golden Triangle - Delhi, Agra, Jaipur over 7 days. Interested in heritage sites and cultural experiences.",
+    "emergencyName": "Priya Kumar",
+    "emergencyPhone": "+91 98765 43211",
+    "documentType": "aadhaar",
+    "documentNumber": "1234 5678 9012",
+    "documentFileName": "aadhaar_arjun.jpg",
     "verificationStatus": "verified",
-    "safetyScore": 78,
-    "lastLocation": { "lat": 26.8467, "lng": 80.9462, "timestamp": "2025-09-14T10:00:00Z" },
-    "itinerary": [ { "from": "Lucknow", "to": "Kedarnath", "start": "2025-09-10", "end": "2025-09-14" } ],
-    "createdAt": "2025-09-01T10:00:00Z"
+    "applicationDate": "2024-01-15T10:30:00.000Z",
+    "blockchainId": "2",
+    "transactionHash": "0x38b230ccc4fa647ee152743058d5748f94a83e42965c4d23a37e37fc58cae232",
+    "blockchainStatus": "migrated",
+    "qrCodeData": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+    "history": [
+      {
+        "action": "registration_submitted",
+        "admin": "system",
+        "notes": "Digital ID application submitted",
+        "timestamp": "2024-01-15T10:30:00.000Z"
+      },
+      {
+        "action": "approved",
+        "admin": "admin@yatrarakshak.com",
+        "notes": "Documents verified successfully. Blockchain ID created: bc_verified_123",
+        "timestamp": "2024-01-16T14:45:00.000Z"
+      }
+    ]
   },
   {
     "_id": "t124",
-    "name": "Raj Verma",
-    "email": "raj@example.com",
-    "phone": "+91-9898989898",
-    "kyc": { "type": "aadhaar", "number_hash": "sha256:def" },
-    "blockchainId": "bc_0xdef456",
+    "name": "Sarah Johnson",
+    "email": "sarah.johnson@email.com",
+    "phone": "+1 555 123 4567",
+    "itinerary": "Backpacking through Rajasthan for 2 weeks. Planning to visit Udaipur, Jodhpur, and Pushkar.",
+    "emergencyName": "Michael Johnson",
+    "emergencyPhone": "+1 555 123 4568",
+    "documentType": "passport",
+    "documentNumber": "A1234567",
+    "documentFileName": "passport_sarah.pdf",
     "verificationStatus": "pending",
-    "safetyScore": 64,
-    "lastLocation": { "lat": 30.0668, "lng": 79.0193, "timestamp": "2025-09-14T09:00:00Z" },
-    "itinerary": [ { "from": "Haridwar", "to": "Rishikesh", "start": "2025-09-12", "end": "2025-09-15" } ],
-    "createdAt": "2025-09-02T12:00:00Z"
+    "applicationDate": "2024-01-20T09:15:00.000Z",
+    "blockchainStatus": "none",
+    "history": [
+      {
+        "action": "registration_submitted",
+        "admin": "system",
+        "notes": "Digital ID application submitted",
+        "timestamp": "2024-01-20T09:15:00.000Z"
+      }
+    ]
   },
   {
     "_id": "t125",
-    "name": "Sara Iqbal",
-    "email": "sara@example.com",
-    "phone": "+91-9777777777",
-    "kyc": { "type": "passport", "number_hash": "sha256:ghi" },
-    "blockchainId": "bc_0xghi789",
-    "verificationStatus": "verified",
-    "safetyScore": 82,
-    "lastLocation": { "lat": 27.1767, "lng": 78.0081, "timestamp": "2025-09-14T08:30:00Z" },
-    "itinerary": [ { "from": "Agra", "to": "Jaipur", "start": "2025-09-13", "end": "2025-09-17" } ],
-    "createdAt": "2025-09-03T15:20:00Z"
+    "name": "Rahul Sharma",
+    "email": "rahul.sharma@email.com",
+    "phone": "+91 87654 32109",
+    "itinerary": "Spiritual journey to Varanasi, Rishikesh, and Haridwar for 10 days.",
+    "emergencyName": "Sunita Sharma",
+    "emergencyPhone": "+91 87654 32110",
+    "documentType": "aadhaar",
+    "documentNumber": "9876 5432 1098",
+    "documentFileName": "aadhaar_rahul.jpg",
+    "verificationStatus": "rejected",
+    "applicationDate": "2024-01-18T16:20:00.000Z",
+    "blockchainStatus": "none",
+    "history": [
+      {
+        "action": "registration_submitted",
+        "admin": "system",
+        "notes": "Digital ID application submitted",
+        "timestamp": "2024-01-18T16:20:00.000Z"
+      },
+      {
+        "action": "rejected",
+        "admin": "admin@yatrarakshak.com",
+        "notes": "Document image unclear. Please resubmit with a clearer photo of your Aadhaar card.",
+        "timestamp": "2024-01-19T11:30:00.000Z"
+      }
+    ]
   },
   {
     "_id": "t126",
-    "name": "Priya Singh",
-    "email": "priya@example.com",
-    "phone": "+91-9666666666",
-    "kyc": { "type": "passport", "number_hash": "sha256:jkl" },
-    "blockchainId": "bc_0xjkl012",
+    "name": "Emily Chen",
+    "email": "emily.chen@email.com",
+    "phone": "+86 138 0013 8000",
+    "itinerary": "Cultural tour of South India - Kerala, Tamil Nadu, Karnataka for 3 weeks.",
+    "emergencyName": "David Chen",
+    "emergencyPhone": "+86 138 0013 8001",
+    "documentType": "passport",
+    "documentNumber": "B9876543",
+    "documentFileName": "passport_emily.pdf",
     "verificationStatus": "pending",
-    "safetyScore": 58,
-    "lastLocation": { "lat": 23.2599, "lng": 77.4126, "timestamp": "2025-09-14T11:10:00Z" },
-    "itinerary": [ { "from": "Bhopal", "to": "Khajuraho", "start": "2025-09-11", "end": "2025-09-14" } ],
-    "createdAt": "2025-09-04T18:00:00Z"
+    "applicationDate": "2024-01-22T13:45:00.000Z",
+    "blockchainStatus": "none",
+    "history": [
+      {
+        "action": "registration_submitted",
+        "admin": "system",
+        "notes": "Digital ID application submitted",
+        "timestamp": "2024-01-22T13:45:00.000Z"
+      }
+    ]
   },
   {
     "_id": "t127",
-    "name": "John Das",
-    "email": "john@example.com",
-    "phone": "+91-9555555555",
-    "kyc": { "type": "aadhaar", "number_hash": "sha256:mno" },
-    "blockchainId": "bc_0xmno345",
+    "name": "Vikram Singh",
+    "email": "vikram.singh@email.com",
+    "phone": "+91 99887 76655",
+    "itinerary": "Adventure tourism in Himachal Pradesh - Manali, Spiti Valley, and trekking for 2 weeks.",
+    "emergencyName": "Ravi Singh",
+    "emergencyPhone": "+91 99887 76656",
+    "documentType": "aadhaar",
+    "documentNumber": "5555 6666 7777",
+    "documentFileName": "aadhaar_vikram.jpg",
     "verificationStatus": "verified",
-    "safetyScore": 71,
-    "lastLocation": { "lat": 22.5726, "lng": 88.3639, "timestamp": "2025-09-14T07:45:00Z" },
-    "itinerary": [ { "from": "Kolkata", "to": "Darjeeling", "start": "2025-09-12", "end": "2025-09-16" } ],
-    "createdAt": "2025-09-05T09:40:00Z"
-  }
-  ,
-  {
-    "_id": "t128",
-    "name": "Archived User",
-    "email": "archived@example.com",
-    "phone": "+91-9444444444",
-    "kyc": { "type": "aadhaar", "number_hash": "sha256:arch" },
-    "blockchainId": "bc_0xarch001",
-    "verificationStatus": "archived",
-    "safetyScore": 50,
-    "lastLocation": { "lat": 19.0760, "lng": 72.8777, "timestamp": "2025-09-10T07:00:00Z" },
-    "itinerary": [ { "from": "Mumbai", "to": "Pune", "start": "2025-08-20", "end": "2025-08-22" } ],
-    "createdAt": "2025-08-20T09:40:00Z"
+    "applicationDate": "2024-01-10T08:00:00.000Z",
+    "blockchainId": "3",
+    "transactionHash": "0x0bcd8356f97236cf206446cebeb6ff4edcac59c06db8a27028fc8165e00ce22f",
+    "blockchainStatus": "migrated",
+    "qrCodeData": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+    "history": [
+      {
+        "action": "registration_submitted",
+        "admin": "system",
+        "notes": "Digital ID application submitted",
+        "timestamp": "2024-01-10T08:00:00.000Z"
+      },
+      {
+        "action": "approved",
+        "admin": "admin@yatrarakshak.com",
+        "notes": "Verified successfully. Adventure tourism cleared. Blockchain ID created: bc_verified_456",
+        "timestamp": "2024-01-11T12:15:00.000Z"
+      }
+    ]
   }
 ]

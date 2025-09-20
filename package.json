@@ -21,7 +21,19 @@
     "typecheck": "tsc",
     "dev:blockchain": "node blockchain/mockServer.js",
     "dev:aiml": "node aiml/mockServer.js",
-    "start:all": "concurrently \"pnpm dev\" \"pnpm dev:blockchain\" \"pnpm dev:aiml\""
+    "start:all": "concurrently \"pnpm dev\" \"pnpm dev:blockchain\" \"pnpm dev:aiml\"",
+    "blockchain:setup": "cd blockchain && npm install && npx hardhat compile",
+    "blockchain:deploy": "cd blockchain && npx hardhat run scripts/deploy.js --network ganache",
+    "blockchain:seed": "cd blockchain && npx hardhat run scripts/seed-data.js --network ganache",
+    "blockchain:migrate": "cd blockchain && npx hardhat run scripts/migrate-from-mock.js --network ganache",
+    "blockchain:test": "cd blockchain && npx hardhat test",
+    "blockchain:clean": "cd blockchain && npx hardhat clean",
+    "blockchain:verify": "cd blockchain && npx hardhat run scripts/verify-deployment.js --network ganache",
+    "blockchain:connection-test": "cd blockchain && node scripts/test-connection.js",
+    "blockchain:health": "curl http://localhost:5002/health",
+    "dev:blockchain:real": "cd blockchain && npm start",
+    "start:all:blockchain": "concurrently \"pnpm dev\" \"pnpm dev:blockchain:real\" \"pnpm dev:aiml\"",
+    "migration:full": "pnpm blockchain:deploy && pnpm blockchain:migrate && pnpm blockchain:verify"
   },
   "dependencies": {
     "dotenv": "^17.2.1",

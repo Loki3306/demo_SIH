@@ -1,0 +1,9 @@
+{
+  "address": "0x4C67865056ccD833d1EdAf8F3AC99D7a27Cf02F0",
+  "transactionHash": "0x96d4b2da021c0e712c4e088508b96add21b2d05c2029367501e5869407a07a27",
+  "deployer": "0x5393F411C24600eA65D1eE2a3d5dBD8306D2C3cC",
+  "network": "ganache",
+  "chainId": 1337,
+  "timestamp": "2025-09-20T05:55:45.747Z",
+  "blockNumber": 7
+}
