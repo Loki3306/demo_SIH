@@ -458,6 +458,31 @@ export function createServer() {
     res.json({ data: adminLogs.slice().reverse() });
   });
 
+  // Simple in-memory settings (dev only)
+  let userSettings: any = {};
+  let adminSettingsStore: any = { maintenanceMode: false, blockchainMock: true };
+
+  app.get('/api/user/settings', (req, res) => {
+    res.json(userSettings);
+  });
+
+  app.put('/api/user/settings', (req, res) => {
+    userSettings = { ...(userSettings || {}), ...(req.body || {}) };
+    res.json({ success: true, settings: userSettings });
+  });
+
+  app.get('/api/admin/settings', (req, res) => {
+    res.json(adminSettingsStore);
+  });
+
+  app.put('/api/admin/settings', (req, res) => {
+    // Simple header-based admin check in dev
+    const adminHeader = req.headers['x-admin'];
+    if (!adminHeader) return res.status(401).json({ error: 'unauthorized' });
+    adminSettingsStore = { ...(adminSettingsStore || {}), ...(req.body || {}) };
+    res.json({ success: true, settings: adminSettingsStore });
+  });
+
   // Admin-only document retrieval (simple header-based check for demo)
   app.get("/api/admin/document/:userId", (req, res) => {
     const adminKey = req.headers['x-admin-key'];

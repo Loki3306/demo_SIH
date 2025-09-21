@@ -60,19 +60,35 @@ export default function Admin() {
   // load data; allow optional overrides so we can trigger a search immediately
   async function load(opts?: { page?: number; status?: typeof statusFilter; query?: string }) {
     setLoading(true);
-    const useStatus = opts?.status ?? statusFilter;
-    const usePage = opts?.page ?? page;
-    const useQuery = opts?.query ?? query;
-    const params = new URLSearchParams();
-    params.set("status", useStatus);
-    params.set("page", String(usePage));
-    params.set("perPage", String(perPage));
-    if ((useQuery ?? "").trim()) params.set("q", (useQuery ?? "").trim());
-    const r = await fetch(`/api/admin/pending-verifications?${params.toString()}`);
-    const json = await r.json();
-    setItems(json.data ?? []);
-    setTotal(json.total ?? 0);
-    setLoading(false);
+    try {
+      const useStatus = opts?.status ?? statusFilter;
+      const usePage = opts?.page ?? page;
+      const useQuery = opts?.query ?? query;
+      const params = new URLSearchParams();
+      params.set("status", useStatus);
+      params.set("page", String(usePage));
+      params.set("perPage", String(perPage));
+      if ((useQuery ?? "").trim()) params.set("q", (useQuery ?? "").trim());
+
+      const r = await fetch(`/api/admin/pending-verifications?${params.toString()}`);
+      if (!r.ok) {
+        // server returned an error; ensure we clear items and show no results
+        console.error("Failed to load admin pending-verifications", r.status, await r.text().catch(() => ""));
+        setItems([]);
+        setTotal(0);
+        return;
+      }
+
+      const json = await r.json();
+      setItems(json.data ?? []);
+      setTotal(json.total ?? 0);
+    } catch (e) {
+      console.error("Error loading admin data", e);
+      setItems([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
   }
 
   // debounce timer for search input

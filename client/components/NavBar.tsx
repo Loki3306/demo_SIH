@@ -39,6 +39,26 @@ export default function NavBar(): JSX.Element | null {
     } catch (e) {}
   }, [isCollapsed]);
 
+  // Listen for settings updates (so saves from Settings page apply immediately)
+  useEffect(() => {
+    const onSettings = (e: Event) => {
+      try {
+        // event detail includes settings with sidebarCollapsed flag
+        const detail: any = (e as CustomEvent)?.detail ?? {};
+        const s = detail.settings ?? {};
+        if (s.sidebarCollapsed !== undefined) {
+          setIsCollapsed(!!s.sidebarCollapsed);
+          try {
+            localStorage.setItem("navbar:collapsed", s.sidebarCollapsed ? "1" : "0");
+            document.cookie = `sidebar:state=${s.sidebarCollapsed ? "true" : "false"}; path=/; max-age=${60 * 60 * 24 * 7}`;
+          } catch (e) {}
+        }
+      } catch (e) {}
+    };
+    window.addEventListener("settings:updated", onSettings as EventListener);
+    return () => window.removeEventListener("settings:updated", onSettings as EventListener);
+  }, []);
+
   // keyboard shortcut Ctrl/Cmd+B to toggle
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
