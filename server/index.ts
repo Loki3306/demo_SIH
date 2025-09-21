@@ -2,6 +2,10 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import authRoutes from "./auth/routes";
+import { setAdminData, initializeDefaultAdmin } from "./auth/adminAuth";
+import { initializeWeb3 } from "./auth/walletAuth";
+import { setAuthData } from "./auth/middleware";
 import path from "path";
 import fs from "fs";
 
@@ -43,6 +47,21 @@ let tourists: Tourist[] = [];
 // Simple in-memory activity log for admin actions (dev only)
 let adminLogs: { userId: string; action: string; admin?: string; notes?: string; timestamp: string }[] = [];
 
+// Police data structure
+type Police = {
+  _id: string;
+  name: string;
+  email: string;
+  passwordHash: string; // Required to match shared types
+  badgeNumber: string;
+  department: string;
+  createdAt: string;
+  lastLogin?: string;
+  isActive: boolean;
+};
+
+let police: Police[] = [];
+
 function loadSeedData() {
   try {
     const seedPath = path.join(process.cwd(), "seed_data", "tourists.json");
@@ -83,6 +102,17 @@ export function createServer() {
   app.use(express.urlencoded({ extended: true }));
 
   loadSeedData();
+
+  // Initialize authentication system
+  initializeDefaultAdmin();
+  initializeWeb3();
+  
+  // Sync in-memory data with auth system
+  setAdminData([], tourists, []);
+  setAuthData([], tourists, police);
+
+  // Auth routes
+  app.use('/api', authRoutes);
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {

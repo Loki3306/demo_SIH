@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { formatDateDDMMYYYY } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import AdminTouristDetail from "@/components/AdminTouristDetail";
@@ -28,7 +29,12 @@ import {
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+<<<<<<< Updated upstream
 import { IdCard, CheckCircle, XCircle, Clock, FileText, Home, Users, Settings } from "lucide-react";
+=======
+import { IdCard, CheckCircle, XCircle, Clock, FileText, Home, Users, Settings, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+>>>>>>> Stashed changes
 
 type Applicant = {
   _id: string;
@@ -43,6 +49,8 @@ type Applicant = {
 };
 
 export default function Admin() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState<Applicant[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPending, setTotalPending] = useState<number | null>(null);
@@ -155,9 +163,33 @@ export default function Admin() {
     if (r.ok) await load();
   }
 
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <>
+<<<<<<< Updated upstream
       <main className="container mx-auto py-8 px-6">
+=======
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-xl font-bold">Admin Dashboard</h1>
+            {user && (
+              <div className="text-sm text-muted-foreground">
+                Welcome, {user.name} ({user.email})
+              </div>
+            )}
+          </div>
+          <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+      </header>
+      <main className="container mx-auto py-8">
+>>>>>>> Stashed changes
           <div className="w-full">
               <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card>
