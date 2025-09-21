@@ -34,6 +34,10 @@ type Tourist = {
   history?: { action: string; admin?: string; notes?: string; timestamp: string }[];
   blockchainId?: string;
   applicationDate?: string;
+  // Enhanced blockchain fields
+  transactionHash?: string;
+  blockchainStatus?: "none" | "pending" | "created" | "failed" | "mock" | "fallback";
+  qrCodeData?: string;
 };
 let tourists: Tourist[] = [];
 // Simple in-memory activity log for admin actions (dev only)
@@ -89,10 +93,27 @@ export function createServer() {
   app.get("/api/demo", handleDemo);
 
   // Auth (mocked)
-  app.post("/api/auth/register", (req, res) => {
+  app.post("/api/auth/register", async (req, res) => {
     const { name, email, phone, password, itinerary, emergencyName, emergencyPhone, documentType, documentNumber, documentFileName } = req.body ?? {};
-    if (!name || !email) return res.status(400).json({ error: "invalid_input" });
+    
+    // Enhanced validation
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ error: "missing_required_fields", message: "Name, email, phone, and password are required" });
+    }
+    
+    if (!documentType || !documentNumber || !documentFileName) {
+      return res.status(400).json({ error: "missing_document_info", message: "Document type, number, and file are required" });
+    }
+    
+    // Check for existing email
+    const existingUser = tourists.find((t) => t.email === email);
+    if (existingUser) {
+      return res.status(409).json({ error: "email_exists", message: "Email already registered" });
+    }
+    
     const userId = `t${Date.now()}`;
+    const applicationDate = new Date().toISOString();
+    
     const record: Tourist = {
       _id: userId,
       name,
@@ -105,10 +126,34 @@ export function createServer() {
       documentNumber,
       documentFileName,
       verificationStatus: "pending",
-      applicationDate: new Date().toISOString(),
+      applicationDate,
+      blockchainStatus: "none",
+      history: [{
+        action: "registration_submitted",
+        admin: "system",
+        notes: "Digital ID application submitted",
+        timestamp: applicationDate
+      }]
     };
+    
     tourists.push(record);
-    res.json({ success: true, userId, status: "pending_verification" });
+    
+    // Add to admin logs
+    adminLogs.push({
+      userId: userId,
+      action: "registration_submitted",
+      admin: "system",
+      notes: `New registration: ${name} (${email})`,
+      timestamp: applicationDate
+    });
+    
+    res.json({ 
+      success: true, 
+      userId, 
+      status: "pending_verification",
+      message: "Registration submitted successfully. You will be notified once verification is complete.",
+      applicationDate
+    });
   });
 
   app.post("/api/auth/login", (req, res) => {
@@ -126,6 +171,87 @@ export function createServer() {
     const t = tourists.find((x) => String(x._id) === String(req.params.id));
     if (!t) return res.status(404).json({ error: "not_found" });
     res.json({ ...t });
+  });
+
+  // Tourist Profile API for authenticated users
+  app.get("/api/tourist/profile/:userId", (req, res) => {
+    const { userId } = req.params;
+    const t = tourists.find((x) => String(x._id) === String(userId));
+    if (!t) return res.status(404).json({ error: "not_found" });
+    
+    // Return profile data without password
+    const { password, ...profileData } = t as any;
+    res.json(profileData);
+  });
+
+  // Digital ID information endpoint
+  app.get("/api/tourist/digital-id/:userId", async (req, res) => {
+    const { userId } = req.params;
+    const t = tourists.find((x) => String(x._id) === String(userId));
+    if (!t) return res.status(404).json({ error: "not_found" });
+    
+    const digitalIdData: any = {
+      userId: t._id,
+      blockchainId: t.blockchainId,
+      verificationStatus: t.verificationStatus,
+      qrCodeData: (t as any).qrCodeData,
+      blockchainStatus: (t as any).blockchainStatus || "none",
+      transactionHash: (t as any).transactionHash,
+      applicationDate: t.applicationDate
+    };
+
+    // If verified and has blockchain ID, try to get blockchain verification
+    if (t.verificationStatus === "verified" && t.blockchainId) {
+      try {
+        const blockchainUrl = new URL(`${BLOCKCHAIN_API_URL}/verifyID`);
+        blockchainUrl.searchParams.set("blockchainId", t.blockchainId);
+        const r = await fetch(blockchainUrl);
+        
+        if (r.ok) {
+          const blockchainData = await r.json();
+          digitalIdData.blockchainVerification = {
+            valid: blockchainData.valid,
+            issuedAt: blockchainData.issuedAt,
+            expiresAt: blockchainData.expiresAt,
+            onChain: blockchainData.onChain
+          };
+        }
+      } catch (e) {
+        digitalIdData.blockchainVerification = {
+          error: "blockchain_unreachable",
+          fallback: true
+        };
+      }
+    }
+    
+    res.json(digitalIdData);
+  });
+
+  // Update profile endpoint for authenticated users
+  app.put("/api/tourist/profile/:userId", (req, res) => {
+    const { userId } = req.params;
+    const { name, phone, emergencyName, emergencyPhone, itinerary } = req.body || {};
+    const t = tourists.find((x) => String(x._id) === String(userId));
+    if (!t) return res.status(404).json({ error: "not_found" });
+    
+    // Only allow updating certain fields
+    if (name) t.name = name;
+    if (phone) t.phone = phone;
+    if (emergencyName) t.emergencyName = emergencyName;
+    if (emergencyPhone) t.emergencyPhone = emergencyPhone;
+    if (itinerary) t.itinerary = itinerary;
+    
+    // Add update to history
+    t.history = t.history || [];
+    t.history.push({
+      action: 'profile_updated',
+      admin: 'user',
+      notes: 'Profile information updated by user',
+      timestamp: new Date().toISOString()
+    });
+    
+    const { password, ...profileData } = t as any;
+    res.json({ success: true, profile: profileData });
   });
 
   // Alerts
@@ -199,21 +325,103 @@ export function createServer() {
     const admin = (req.headers['x-admin'] as string) ?? 'admin-dev';
     const t = tourists.find((x) => x._id === userId);
     if (!t) return res.status(404).json({ error: "not_found" });
+    
     try {
+      // Enhanced blockchain integration with better error handling
+      const blockchainPayload = {
+        userId: t._id,
+        name: t.name,
+        documentType: t.documentType,
+        documentNumber: t.documentNumber,
+        kycHash: t.documentFileName ? `sha256:${t.documentFileName}` : undefined,
+        validUntil: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString() // 1 year
+      };
+      
       const r = await fetch(`${BLOCKCHAIN_API_URL}/createID`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: t.name, documentType: t.documentType, documentNumber: t.documentNumber }),
+        body: JSON.stringify(blockchainPayload),
       });
+      
+      if (!r.ok) {
+        throw new Error(`Blockchain service returned ${r.status}: ${r.statusText}`);
+      }
+      
       const json = await r.json();
+      
+      // Update tourist record with blockchain information
       t.blockchainId = json?.blockchainId ?? `bc_${userId}`;
       t.verificationStatus = "verified";
+      
+      // Add blockchain-specific fields if available
+      if (json.transactionHash) {
+        (t as any).transactionHash = json.transactionHash;
+      }
+      if (json.qr) {
+        (t as any).qrCodeData = json.qr;
+      }
+      if (json.onChain !== undefined) {
+        (t as any).blockchainStatus = json.onChain ? "created" : "mock";
+      }
+      
       // append history
-  t.history = t.history ?? [];
-  t.history.push({ action: 'approved', admin, notes, timestamp: new Date().toISOString() });
-  adminLogs.push({ userId: userId, action: 'approved', admin, notes, timestamp: new Date().toISOString() });
-      return res.json({ success: true, blockchainId: t.blockchainId });
+      t.history = t.history ?? [];
+      t.history.push({ 
+        action: 'approved', 
+        admin, 
+        notes: notes ? `${notes} (Blockchain ID: ${t.blockchainId})` : `Blockchain ID created: ${t.blockchainId}`, 
+        timestamp: new Date().toISOString() 
+      });
+      adminLogs.push({ 
+        userId: userId, 
+        action: 'approved', 
+        admin, 
+        notes: notes ? `${notes} (Blockchain ID: ${t.blockchainId})` : `Blockchain ID created: ${t.blockchainId}`, 
+        timestamp: new Date().toISOString() 
+      });
+      
+      return res.json({ 
+        success: true, 
+        blockchainId: t.blockchainId,
+        transactionHash: json.transactionHash,
+        onChain: json.onChain,
+        qrCode: json.qr
+      });
+      
     } catch (e: any) {
+      console.error(`Blockchain error for user ${userId}:`, e.message);
+      
+      // Fallback: approve without blockchain if service is unavailable
+      if (e.message.includes('CONNECTION_REFUSED') || e.message.includes('ECONNREFUSED') || e.message.includes('fetch failed')) {
+        console.log(`Fallback: Approving ${userId} without blockchain integration`);
+        
+        t.blockchainId = `fallback_${userId}_${Date.now()}`;
+        t.verificationStatus = "verified";
+        (t as any).blockchainStatus = "fallback";
+        
+        t.history = t.history ?? [];
+        t.history.push({ 
+          action: 'approved', 
+          admin, 
+          notes: notes ? `${notes} (Blockchain unavailable - fallback mode)` : 'Approved in fallback mode - blockchain unavailable', 
+          timestamp: new Date().toISOString() 
+        });
+        adminLogs.push({ 
+          userId: userId, 
+          action: 'approved', 
+          admin, 
+          notes: notes ? `${notes} (Blockchain unavailable - fallback mode)` : 'Approved in fallback mode - blockchain unavailable', 
+          timestamp: new Date().toISOString() 
+        });
+        
+        return res.json({ 
+          success: true, 
+          blockchainId: t.blockchainId,
+          fallback: true,
+          warning: "Blockchain service unavailable - using fallback mode"
+        });
+      }
+      
       return res.status(502).json({ error: "blockchain_error", details: e?.message });
     }
   });
@@ -273,6 +481,90 @@ export function createServer() {
   const BLOCKCHAIN_API_URL = process.env.BLOCKCHAIN_API_URL || "http://localhost:5002";
   const AIML_API_URL = process.env.AIML_API_URL || "http://localhost:5003";
 
+  // Blockchain ID creation endpoint
+  app.post("/api/blockchain/create-id", async (req, res) => {
+    const { userId, name, documentHash } = req.body || {};
+    
+    if (!userId || !name) {
+      return res.status(400).json({ error: "missing_required_fields" });
+    }
+    
+    try {
+      const tourist = tourists.find((t) => t._id === userId);
+      if (!tourist) {
+        return res.status(404).json({ error: "tourist_not_found" });
+      }
+      
+      const blockchainPayload = {
+        userId,
+        name,
+        documentType: tourist.documentType,
+        documentNumber: tourist.documentNumber,
+        kycHash: documentHash || `sha256:${tourist.documentFileName}`,
+        validUntil: new Date(Date.now() + 5 * 365 * 24 * 3600 * 1000).toISOString() // 5 years
+      };
+      
+      const r = await fetch(`${BLOCKCHAIN_API_URL}/createID`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(blockchainPayload),
+      });
+      
+      const json = await r.json();
+      
+      if (!r.ok) {
+        throw new Error(`Blockchain service error: ${r.status}`);
+      }
+      
+      // Update tourist record
+      tourist.blockchainId = json.blockchainId;
+      tourist.transactionHash = json.transactionHash;
+      tourist.blockchainStatus = json.onChain ? "created" : "mock";
+      (tourist as any).qrCodeData = json.qr;
+      
+      res.json({
+        success: true,
+        blockchainId: json.blockchainId,
+        qrCode: json.qr,
+        expiresAt: json.expiresAt,
+        transactionHash: json.transactionHash,
+        onChain: json.onChain
+      });
+      
+    } catch (e: any) {
+      console.error(`Blockchain ID creation error:`, e.message);
+      res.status(502).json({ 
+        error: "blockchain_service_error", 
+        message: e.message,
+        fallback: true
+      });
+    }
+  });
+
+  // Blockchain ID verification endpoint
+  app.get("/api/blockchain/verify-id", async (req, res) => {
+    const blockchainId = req.query.blockchainId as string;
+    
+    if (!blockchainId) {
+      return res.status(400).json({ error: "missing_blockchain_id" });
+    }
+    
+    try {
+      const url = new URL(`${BLOCKCHAIN_API_URL}/verifyID`);
+      url.searchParams.set("blockchainId", blockchainId);
+      
+      const r = await fetch(url);
+      const json = await r.json();
+      
+      res.status(r.status).json(json);
+    } catch (e: any) {
+      res.status(502).json({ 
+        error: "blockchain_verification_error", 
+        message: e.message 
+      });
+    }
+  });
+
   app.post("/api/bridge/blockchain/createID", async (req, res) => {
     try {
       const r = await fetch(`${BLOCKCHAIN_API_URL}/createID`, {
@@ -297,6 +589,66 @@ export function createServer() {
     } catch (e: any) {
       res.status(502).json({ error: "upstream_unreachable", details: e?.message });
     }
+  });
+
+  // Blockchain health check endpoint
+  app.get("/api/bridge/blockchain/health", async (req, res) => {
+    try {
+      const r = await fetch(`${BLOCKCHAIN_API_URL}/health`);
+      const json = await r.json();
+      res.status(r.status).json(json);
+    } catch (e: any) {
+      res.status(502).json({ 
+        error: "blockchain_unreachable", 
+        details: e?.message,
+        fallbackMode: true,
+        blockchainUrl: BLOCKCHAIN_API_URL
+      });
+    }
+  });
+
+  // Enhanced verification endpoint that includes blockchain status
+  app.get("/api/tourists/:id/verification", async (req, res) => {
+    const t = tourists.find((x) => String(x._id) === String(req.params.id));
+    if (!t) return res.status(404).json({ error: "not_found" });
+
+    const response: any = {
+      userId: t._id,
+      name: t.name,
+      email: t.email,
+      verificationStatus: t.verificationStatus,
+      blockchainId: t.blockchainId,
+      applicationDate: t.applicationDate,
+      history: t.history
+    };
+
+    // If verified and has blockchain ID, try to get blockchain verification
+    if (t.verificationStatus === "verified" && t.blockchainId) {
+      try {
+        const blockchainUrl = new URL(`${BLOCKCHAIN_API_URL}/verifyID`);
+        blockchainUrl.searchParams.set("blockchainId", t.blockchainId);
+        const r = await fetch(blockchainUrl);
+        
+        if (r.ok) {
+          const blockchainData = await r.json();
+          response.blockchainVerification = {
+            valid: blockchainData.valid,
+            status: blockchainData.status,
+            issuedAt: blockchainData.issuedAt,
+            expiresAt: blockchainData.expiresAt,
+            onChain: blockchainData.onChain,
+            verificationLevel: blockchainData.verificationLevel
+          };
+        }
+      } catch (e) {
+        response.blockchainVerification = {
+          error: "blockchain_unreachable",
+          fallback: true
+        };
+      }
+    }
+
+    res.json(response);
   });
 
   app.post("/api/bridge/aiml/safetyScore", async (req, res) => {

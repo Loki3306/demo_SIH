@@ -249,47 +249,142 @@ export default function AdminTouristDetail({
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Document</CardTitle>
+                  <CardTitle>Document Verification</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm">
-                    <div className="text-xs text-muted-foreground font-medium">Type</div>
-                    <div className="mt-1 text-base text-foreground">{detail.documentType ?? "-"}</div>
-                    <div className="mt-2 text-xs text-muted-foreground font-medium">Number</div>
-                    <div className="mt-1 text-base text-foreground">{detail.documentNumber ?? "-"}</div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div>
+                        <div className="text-xs text-muted-foreground font-medium">Document Type</div>
+                        <div className="mt-1 text-base text-foreground capitalize">{detail.documentType || "Unknown"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground font-medium">Document Number</div>
+                        <div className="mt-1 text-base text-foreground font-mono">{detail.documentNumber || "Unknown"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground font-medium">Uploaded File</div>
+                        <div className="mt-1 text-base text-foreground">{detail.documentFileName || "No file"}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="text-xs text-muted-foreground font-medium">Document Preview</div>
+                      <div className="border rounded-lg p-4 min-h-[120px] flex items-center justify-center bg-muted/50">
+                        {detail.documentFileName ? (
+                          <div className="text-center">
+                            <Button 
+                              size="sm" 
+                              onClick={openDocument}
+                              className="mb-2"
+                            >
+                              View Document
+                            </Button>
+                            <p className="text-xs text-muted-foreground">
+                              Click to open document in new window
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="text-center text-muted-foreground">
+                            <p className="text-sm">No document uploaded</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-3">
-                    <Button size="sm" onClick={openDocument}>
-                      View Uploaded Document
-                    </Button>
+                  
+                  {/* Verification Status and Actions */}
+                  <div className="mt-4 p-3 rounded-lg bg-muted/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Verification Status</span>
+                      <Badge className={`capitalize ${
+                        detail.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' :
+                        detail.verificationStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        detail.verificationStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {detail.verificationStatus || 'Unknown'}
+                      </Badge>
+                    </div>
+                    
+                    {detail.verificationStatus === 'pending' && (
+                      <div className="text-xs text-muted-foreground">
+                        Document requires admin review and verification
+                      </div>
+                    )}
+                    
+                    {detail.verificationStatus === 'verified' && detail.blockchainId && (
+                      <div className="text-xs text-muted-foreground">
+                        Digital ID created: {detail.blockchainId}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Admin Notes & History</CardTitle>
+                  <CardTitle>Admin Review</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <Textarea placeholder="Add notes for approval or rejection" value={notes} onChange={(e) => setNotes(e.target.value)} />
+                  <div className="space-y-4">
                     <div>
-                      <strong>History</strong>
+                      <label className="text-sm font-medium" htmlFor="admin-notes">
+                        Verification Notes
+                      </label>
+                      <Textarea 
+                        id="admin-notes"
+                        placeholder="Add notes about the verification decision (required for rejection)..."
+                        value={notes} 
+                        onChange={(e) => setNotes(e.target.value)}
+                        className="mt-1"
+                        rows={3}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        These notes will be visible in the application history.
+                      </p>
+                    </div>
+                    
+                    {detail.verificationStatus === 'pending' && (
+                      <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                        <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                          Pending Review
+                        </h4>
+                        <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                          This application requires your review. Please verify the documents and make a decision.
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Application History</h4>
                       {detail.history && detail.history.length > 0 ? (
-                        <ul className="mt-2 space-y-2">
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
                           {detail.history.map((h, i) => (
-                            <li key={i} className="text-sm border rounded px-3 py-2">
-                              <div className="flex items-center justify-between">
-                                <div className="font-medium">{h.action}</div>
-                                <div className="text-xs text-muted-foreground">{formatDateDDMMYYYY(h.timestamp)}</div>
+                            <div key={i} className="text-sm border rounded-lg px-3 py-2 bg-muted/30">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium capitalize">{h.action.replace('_', ' ')}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDateDDMMYYYY(h.timestamp)}
+                                </span>
                               </div>
-                              {h.admin && <div className="text-xs mt-1">By: {h.admin}</div>}
-                              {h.notes && <div className="text-xs mt-1">Notes: {h.notes}</div>}
-                            </li>
+                              {h.admin && (
+                                <div className="text-xs text-muted-foreground mb-1">
+                                  By: {h.admin}
+                                </div>
+                              )}
+                              {h.notes && (
+                                <div className="text-xs bg-background/50 rounded p-2">
+                                  {h.notes}
+                                </div>
+                              )}
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       ) : (
-                        <div className="mt-2 text-xs text-muted-foreground">No history</div>
+                        <div className="text-xs text-muted-foreground bg-muted/30 rounded p-3 text-center">
+                          No history available
+                        </div>
                       )}
                     </div>
                   </div>
@@ -301,21 +396,43 @@ export default function AdminTouristDetail({
           )}
         </div>
 
-        <DialogFooter className="mt-4 bg-background/60 backdrop-blur-sm">
-          <div className="flex items-center justify-between w-full gap-2 flex-wrap p-4">
-            <div>
-              <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                Close
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => postAction("reject")} disabled={actionLoading}>
-                Reject
-              </Button>
-              <Button onClick={() => postAction("approve")} disabled={actionLoading}>
-                Approve
-              </Button>
-            </div>
+        <DialogFooter className="mt-4 bg-background/60 backdrop-blur-sm border-t">
+          <div className="flex items-center justify-between w-full gap-3 p-4">
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+            
+            {detail && detail.verificationStatus === 'pending' && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => postAction("reject")} 
+                  disabled={actionLoading}
+                  className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+                >
+                  {actionLoading ? "Processing..." : "Reject Application"}
+                </Button>
+                <Button 
+                  onClick={() => postAction("approve")} 
+                  disabled={actionLoading}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {actionLoading ? "Processing..." : "Approve & Create Digital ID"}
+                </Button>
+              </div>
+            )}
+            
+            {detail && detail.verificationStatus === 'verified' && (
+              <div className="text-sm text-green-600 font-medium">
+                ✓ Application Approved
+              </div>
+            )}
+            
+            {detail && detail.verificationStatus === 'rejected' && (
+              <div className="text-sm text-red-600 font-medium">
+                ✗ Application Rejected
+              </div>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>
