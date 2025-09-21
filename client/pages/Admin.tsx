@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { formatDateDDMMYYYY } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import AdminTouristDetail from "@/components/AdminTouristDetail";
@@ -49,6 +50,8 @@ type Applicant = {
 };
 
 export default function Admin() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState<Applicant[]>([]);
@@ -162,6 +165,10 @@ export default function Admin() {
     const r = await fetch(`/api/admin/archive/${id}`, { method: "POST" });
     if (r.ok) await load();
   }
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   const handleLogout = async () => {
     await logout();

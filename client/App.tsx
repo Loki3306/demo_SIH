@@ -71,6 +71,9 @@ const App = () => (
               <Route path="/admin/login" element={<EnhancedAdminLogin />} />
               <Route path="/admin" element={<ProtectedRoute element={<Admin />} requiredRole="admin" />} />
               <Route path="/admin/logs" element={<ProtectedRoute element={<AdminLogs />} requiredRole="admin" />} />
+              <Route path="/admin/login" element={<EnhancedAdminLogin />} />
+              <Route path="/admin" element={<ProtectedRoute element={<Admin />} requiredRole="admin" />} />
+              <Route path="/admin/logs" element={<ProtectedRoute element={<AdminLogs />} requiredRole="admin" />} />
               <Route path="/auth/login" element={<AuthLogin />} />
               <Route path="/auth/register" element={<AuthRegister />} />
               <Route path="/profile" element={<MyProfile />} />
