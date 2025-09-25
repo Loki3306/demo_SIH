@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 import { formatDateDDMMYYYY } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import AdminTouristDetail from "@/components/AdminTouristDetail";
@@ -29,13 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-<<<<<<< Updated upstream
-import { IdCard, CheckCircle, XCircle, Clock, FileText, Home, Users, Settings } from "lucide-react";
-=======
+import { Badge } from '@/components/ui/badge';
 import { IdCard, CheckCircle, XCircle, Clock, FileText, Home, Users, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
->>>>>>> Stashed changes
 
 type Applicant = {
   _id: string;
@@ -50,8 +45,6 @@ type Applicant = {
 };
 
 export default function Admin() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState<Applicant[]>([]);
@@ -170,15 +163,8 @@ export default function Admin() {
     await logout();
   };
 
-  const handleLogout = async () => {
-    await logout();
-  };
-
   return (
     <>
-<<<<<<< Updated upstream
-      <main className="container mx-auto py-8 px-6">
-=======
       <header className="border-b">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -196,7 +182,6 @@ export default function Admin() {
         </div>
       </header>
       <main className="container mx-auto py-8">
->>>>>>> Stashed changes
           <div className="w-full">
               <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card>

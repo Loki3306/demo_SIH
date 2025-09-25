@@ -224,4 +224,5 @@ router.post('/auth/refresh', (req, res) => {
   });
 });
 
+export const authRoutes = router;
 export default router;

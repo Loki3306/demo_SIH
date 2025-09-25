@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Shield, Heart, Globe } from 'lucide-react';
 import { QuickStatusIndicator } from '@/components/SystemStatusIndicator';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Footer() {
   const { t } = useTranslation();

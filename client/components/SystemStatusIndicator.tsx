@@ -13,7 +13,7 @@ import {
   X
 } from 'lucide-react';
 import { useBlockchainMonitoring } from '@/hooks/useBlockchainMonitoring';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SystemStatusIndicatorProps {
   showDetailed?: boolean;

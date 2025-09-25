@@ -25,6 +25,7 @@ export interface Tourist {
   history?: VerificationHistoryEntry[];
   blockchainId?: string;
   applicationDate?: string;
+  createdAt?: string;
   // Enhanced blockchain fields
   transactionHash?: string;
   blockchainStatus?: "none" | "pending" | "created" | "failed" | "mock" | "fallback";
@@ -53,6 +54,12 @@ export interface Admin {
   authType: "password" | "wallet" | "hybrid"; // Authentication method
   permissions?: string[]; // Granular permission set
   blockchainRole?: "admin" | "senior_admin" | "authority"; // Role in smart contract
+  // Convenience wrapper returned to clients for UI (not persisted)
+  walletInfo?: {
+    address?: string;
+    balance?: string;
+    authorityRole?: string;
+  };
 }
 
 // Police Profile Structure
@@ -101,6 +108,7 @@ export interface AuditLogEntry {
 export interface AuthTokenPayload {
   userId: string;
   role: UserRole;
+  sessionId?: string;
   specialLoginId?: string; // For tourists
   iat: number;
   exp: number;
@@ -112,6 +120,7 @@ export interface AuthResponse {
   refreshToken?: string;
   role: UserRole;
   userId: string;
+  sessionId?: string;
   specialLoginId?: string;
   user: Partial<Tourist | Admin | Police>;
 }
@@ -185,10 +194,11 @@ export interface AuthSession {
   adminId: string;
   walletAddress?: string;
   jwtToken: string;
-  expiresAt: string;
+  token?: string; // compatibility alias
+  expiresAt: string | Date;
   ipAddress: string;
   userAgent: string;
-  authType: "password" | "wallet";
+  authType: "password" | "wallet" | "hybrid";
 }
 
 // Blockchain Health Status

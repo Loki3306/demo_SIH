@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { verifyToken } from './security';
 import { Admin, Tourist, Police } from '../../shared/types';
 
 // Simple in-memory stores (replace with database in production)
@@ -70,14 +69,15 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
     return res.status(401).json({ error: 'access_denied', message: 'Access token required' });
   }
 
-  const payload = verifyToken(token);
-  if (!payload) {
-    return res.status(403).json({ error: 'invalid_token', message: 'Invalid or expired token' });
-  }
+  jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key', (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'invalid_token', message: 'Invalid or expired token' });
+    }
 
-  // Attach decoded payload to request
-  (req as any).auth = payload;
-  next();
+    // Add decoded user info to request
+    (req as any).auth = decoded;
+    next();
+  });
 }
 
 // Role-based authorization middleware

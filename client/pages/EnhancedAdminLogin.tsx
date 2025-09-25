@@ -78,19 +78,10 @@ export default function EnhancedAdminLogin() {
   const checkBlockchainHealth = async () => {
     setHealthLoading(true);
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/blockchain/health', {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
+      const response = await fetch('/api/admin/blockchain/health');
       if (response.ok) {
         const health: BlockchainHealth = await response.json();
         setBlockchainHealth(health);
-      } else if (response.status === 401) {
-        // Clear stale token and do not show health
-        localStorage.removeItem('adminToken');
-        setBlockchainHealth(null);
-      } else {
-        console.debug('Blockchain health check failed with status', response.status);
       }
     } catch (error) {
       console.warn('Failed to check blockchain health:', error);
@@ -110,7 +101,7 @@ export default function EnhancedAdminLogin() {
         ...(authType === "password" ? { email, password } : { walletPrivateKey })
       };
       
-      const response = await fetch("/api/auth/admin-login", {
+      const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

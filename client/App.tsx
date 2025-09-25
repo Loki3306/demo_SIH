@@ -21,12 +21,9 @@ import AuthRegister from "@/pages/AuthRegister";
 import MyProfile from "@/pages/MyProfile";
 import LegalPrivacy from "@/pages/LegalPrivacy";
 import LegalTerms from "@/pages/LegalTerms";
-<<<<<<< Updated upstream
 import Settings from "@/pages/Settings";
-=======
 import EnhancedAdminLogin from "@/pages/EnhancedAdminLogin";
 import ProtectedRoute from "@/components/ProtectedRoute";
->>>>>>> Stashed changes
 
 const queryClient = new QueryClient();
 
@@ -38,7 +35,6 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-<<<<<<< Updated upstream
             <div className="min-h-screen md:flex">
               <NavBar />
               <NavBarSlideHandle />
@@ -48,8 +44,9 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/tourist/dashboard" element={<TouristDashboard />} />
                   <Route path="/police/dashboard" element={<PoliceDashboard />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/admin/logs" element={<AdminLogs />} />
+                  <Route path="/admin/login" element={<EnhancedAdminLogin />} />
+                  <Route path="/admin" element={<ProtectedRoute element={<Admin />} requiredRole="admin" />} />
+                  <Route path="/admin/logs" element={<ProtectedRoute element={<AdminLogs />} requiredRole="admin" />} />
                   <Route path="/auth/login" element={<AuthLogin />} />
                   <Route path="/auth/register" element={<AuthRegister />} />
                   <Route path="/profile" element={<MyProfile />} />
@@ -61,28 +58,6 @@ const App = () => (
                 </Routes>
               </main>
             </div>
-=======
-            <NavBar />
-            <NavBarSlideHandle />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/tourist/dashboard" element={<TouristDashboard />} />
-              <Route path="/police/dashboard" element={<PoliceDashboard />} />
-              <Route path="/admin/login" element={<EnhancedAdminLogin />} />
-              <Route path="/admin" element={<ProtectedRoute element={<Admin />} requiredRole="admin" />} />
-              <Route path="/admin/logs" element={<ProtectedRoute element={<AdminLogs />} requiredRole="admin" />} />
-              <Route path="/admin/login" element={<EnhancedAdminLogin />} />
-              <Route path="/admin" element={<ProtectedRoute element={<Admin />} requiredRole="admin" />} />
-              <Route path="/admin/logs" element={<ProtectedRoute element={<AdminLogs />} requiredRole="admin" />} />
-              <Route path="/auth/login" element={<AuthLogin />} />
-              <Route path="/auth/register" element={<AuthRegister />} />
-              <Route path="/profile" element={<MyProfile />} />
-              <Route path="/legal/privacy" element={<LegalPrivacy />} />
-              <Route path="/legal/terms" element={<LegalTerms />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
->>>>>>> Stashed changes
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>

@@ -170,8 +170,9 @@ export async function checkWalletBalance(walletAddress: string): Promise<{
       throw new Error('Web3 not initialized');
     }
     
-    const balance = await web3.eth.getBalance(walletAddress);
-    const balanceEth = web3.utils.fromWei(balance, 'ether');
+  const rawBalance = await web3.eth.getBalance(walletAddress);
+  const balance = String(rawBalance);
+  const balanceEth = web3.utils.fromWei(balance, 'ether');
     const sufficient = parseFloat(balanceEth) >= 0.1; // Minimum 0.1 ETH required
     
     return {
@@ -311,9 +312,9 @@ const activeSessions = new Map<string, AuthSession>();
 /**
  * Create authentication session
  */
-export function createAuthSession(admin: Admin, clientIP: string, userAgent: string): AuthSession {
+export function createAuthSession(admin: Admin | any, clientIP: string = '0.0.0.0', userAgent: string = 'test-agent'): AuthSession {
   const sessionId = generateSessionId();
-  const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(); // 8 hours
+  const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
   
   const token = generateToken({
     userId: admin._id,
@@ -323,9 +324,10 @@ export function createAuthSession(admin: Admin, clientIP: string, userAgent: str
   
   const session: AuthSession = {
     sessionId,
-    adminId: admin._id,
-    walletAddress: admin.walletAddress,
+    adminId: admin._id || admin.adminId || 'admin-dev',
+    walletAddress: admin.walletAddress || admin.walletAddress || undefined,
     jwtToken: token,
+    token, // compatibility alias
     expiresAt,
     ipAddress: clientIP,
     userAgent,

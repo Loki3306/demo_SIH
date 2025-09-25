@@ -426,6 +426,28 @@ export function generateSecurityReport(): {
   return report;
 }
 
+// Compatibility exports used by tests and older code
+export async function validateSecurityConstraints(privateKey: string, walletAddress: string, balanceEth: string, req: Request) {
+  return validateWalletAuthSecurity(privateKey, walletAddress, balanceEth, req);
+}
+
+export function trackLoginAttempt(walletAddress: string) {
+  const r = checkWalletRateLimit(walletAddress);
+  return r;
+}
+
+export function checkRateLimit(walletAddress: string) {
+  return checkWalletRateLimit(walletAddress);
+}
+
+export function detectSuspiciousActivity(ip: string, walletAddress: string) {
+  return validateIPAddressSecurity(ip, walletAddress);
+}
+
+export function auditSecurityEvent(entry: any) {
+  logSecurityAudit(entry as SecurityAuditLog);
+}
+
 /**
  * Clear old audit logs (for maintenance)
  */

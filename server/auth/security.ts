@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
-import { AuthTokenPayload, SecurityConfig, PasswordRequirements } from '../shared/types';
+import { AuthTokenPayload, SecurityConfig, PasswordRequirements } from '../../shared/types';
 
 // Security configuration
 export const SECURITY_CONFIG: SecurityConfig = {
@@ -53,7 +54,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
  */
 export function generateToken(payload: Omit<AuthTokenPayload, 'iat' | 'exp'>, isAdmin = false): string {
   const expiresIn = isAdmin ? ADMIN_JWT_EXPIRES : SECURITY_CONFIG.jwt.expiresIn;
-  return jwt.sign(payload, SECURITY_CONFIG.jwt.secret, { 
+  return signJwt(payload, SECURITY_CONFIG.jwt.secret, {
     expiresIn,
     issuer: 'yatrarakshak',
     audience: 'yatrarakshak-users'
@@ -64,15 +65,24 @@ export function generateToken(payload: Omit<AuthTokenPayload, 'iat' | 'exp'>, is
  * Generate refresh token
  */
 export function generateRefreshToken(userId: string): string {
-  return jwt.sign(
-    { userId, type: 'refresh' }, 
+  return signJwt(
+    { userId, type: 'refresh' },
     SECURITY_CONFIG.jwt.secret,
-    { 
+    {
       expiresIn: SECURITY_CONFIG.jwt.refreshExpiresIn,
       issuer: 'yatrarakshak',
       audience: 'yatrarakshak-refresh'
     }
   );
+}
+
+/**
+ * Small typed wrapper around jwt.sign to keep the cast localized and provide SignOptions typing.
+ */
+function signJwt(payload: unknown, secret: string, options?: any): string {
+  // jwt.sign has complex overloads across versions; keep a single controlled cast here.
+  const safeOptions = options ? { ...options, expiresIn: (options as any).expiresIn as any } : undefined;
+  return jwt.sign(payload as unknown as jwt.JwtPayload, secret, safeOptions) as string;
 }
 
 /**

@@ -736,3 +736,5 @@ export function createServer() {
 
   return app;
 }
+
+export default createServer;

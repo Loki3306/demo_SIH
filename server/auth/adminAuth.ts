@@ -396,11 +396,11 @@ async function finalizeAuthentication(
   
   const response: AuthResponse = {
     token: session.jwtToken,
+    sessionId: session.sessionId,
     role: 'admin',
     userId: admin._id,
     user: {
       ...adminProfile,
-      sessionId: session.sessionId,
       walletInfo: walletInfo ? {
         address: walletInfo.walletAddress,
         balance: walletInfo.balance,
