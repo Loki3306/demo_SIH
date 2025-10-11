@@ -36,6 +36,26 @@ FALLBACK_MODE_ENABLED=true
 PING_MESSAGE=ping
 ```
 
+## Admin Authentication
+
+The system supports two authentication methods for admins:
+
+1. **Password-based authentication**:
+   - Default admin credentials:
+     - Email: admin@yatrarakshak.com
+     - Password: admin123
+
+2. **Wallet-based authentication**:
+   - Uses Ethereum private keys for authentication
+   - Requires Ganache GUI to be running
+   - Admin must have authority on the smart contract
+
+To access the admin dashboard:
+1. Navigate to `/admin/login`
+2. Choose authentication method
+3. Enter credentials
+4. Access protected admin routes at `/admin` and `/admin/logs`
+
 ## Seed Data
 Sample JSON files are in `seed_data/` (tourists, police, alerts). The API loads `seed_data/tourists.json` for basic responses.
 
@@ -125,6 +145,12 @@ socket.on('new-anomaly-alert', {
 - POST /api/bridge/aiml/safetyScore
 - POST /api/bridge/aiml/detectAnomaly
 
+## Admin Routes
+- GET /admin/login - Admin login page
+- GET /admin - Admin dashboard (protected)
+- GET /admin/logs - Admin activity logs (protected)
+- POST /api/auth/admin-login - Admin authentication endpoint
+
 ## Phase 1 Acceptance Checklist
 - [x] Landing page with interactive 3D globe
 - [x] Panic flow emits realtime alert
@@ -132,6 +158,7 @@ socket.on('new-anomaly-alert', {
 - [x] `/blockchain` and `/aiml` mocks present with READMEs
 - [x] Plug‑and‑play bridge via env vars
 - [x] EN/HI language toggle, dark mode
+- [x] Admin authentication with route protection
 
 ## Roadmap
 - Tourist auth + registration form, verification queue (admin)

@@ -22,6 +22,8 @@ import MyProfile from "@/pages/MyProfile";
 import LegalPrivacy from "@/pages/LegalPrivacy";
 import LegalTerms from "@/pages/LegalTerms";
 import Settings from "@/pages/Settings";
+import EnhancedAdminLogin from "@/pages/EnhancedAdminLogin";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -42,8 +44,9 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/tourist/dashboard" element={<TouristDashboard />} />
                   <Route path="/police/dashboard" element={<PoliceDashboard />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/admin/logs" element={<AdminLogs />} />
+                  <Route path="/admin/login" element={<EnhancedAdminLogin />} />
+                  <Route path="/admin" element={<ProtectedRoute element={<Admin />} requiredRole="admin" />} />
+                  <Route path="/admin/logs" element={<ProtectedRoute element={<AdminLogs />} requiredRole="admin" />} />
                   <Route path="/auth/login" element={<AuthLogin />} />
                   <Route path="/auth/register" element={<AuthRegister />} />
                   <Route path="/profile" element={<MyProfile />} />
