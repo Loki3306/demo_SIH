@@ -45,12 +45,47 @@ export default function TouristDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Location tracking state
+  const [isTracking, setIsTracking] = useState(false);
+  const [trackingInterval, setTrackingInterval] = useState<NodeJS.Timeout | null>(null);
+  
+  // Safety score state
+  const [safetyScore, setSafetyScore] = useState(100);
+  const [scoreFactors, setScoreFactors] = useState<string[]>([]);
+  const [isLoadingScore, setIsLoadingScore] = useState(true);
+  
+  // Authentication disabled for now
+  // const [authToken] = useState("demo_token_123"); // Mock token - get from auth context in real app
+  
   // Mock user ID - in real app, get from authentication context
   const userId = "t123";
   
   useEffect(() => {
     fetchDashboardData();
+    fetchSafetyScore();
   }, []);
+  
+  const fetchSafetyScore = async () => {
+    try {
+      setIsLoadingScore(true);
+      // This call goes to the Express bridge endpoint
+      const response = await fetch(`/api/bridge/aiml/safetyScore?user_id=${userId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSafetyScore(data.score);
+        setScoreFactors(data.factors || []);
+      } else {
+        console.error("Failed to fetch safety score:", response.statusText);
+        // Keep default values on error
+      }
+    } catch (error) {
+      console.error("Error fetching safety score:", error);
+      // Keep default values on error
+    } finally {
+      setIsLoadingScore(false);
+    }
+  };
   
   const fetchDashboardData = async () => {
     try {
@@ -96,6 +131,136 @@ export default function TouristDashboard() {
       default: return <Clock className="w-4 h-4" />;
     }
   };
+
+  // Location tracking functions
+  const handleStartJourney = async () => {
+    try {
+      const aimlApiUrl = import.meta.env.VITE_AIML_API_URL || 'http://127.0.0.1:8000';
+      
+      const response = await fetch(`${aimlApiUrl}/api/v1/start_journey/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+        }),
+      });
+
+      if (response.ok) {
+        setIsTracking(true);
+        
+        // Start sending location data every 10 seconds
+        const interval = setInterval(() => {
+          sendLocationData();
+        }, 10000);
+        
+        setTrackingInterval(interval);
+        
+        // Send initial location immediately
+        sendLocationData();
+      } else {
+        console.error('Failed to start journey:', response.statusText);
+        setError('Failed to start journey tracking');
+      }
+    } catch (error) {
+      console.error('Error starting journey:', error);
+      setError('Error starting journey tracking');
+    }
+  };
+
+  const handleEndJourney = async () => {
+    try {
+      const aimlApiUrl = import.meta.env.VITE_AIML_API_URL || 'http://127.0.0.1:8000';
+      
+      const response = await fetch(`${aimlApiUrl}/api/v1/end_journey/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+        }),
+      });
+
+      if (response.ok) {
+        setIsTracking(false);
+        
+        // Clear the interval
+        if (trackingInterval) {
+          clearInterval(trackingInterval);
+          setTrackingInterval(null);
+        }
+      } else {
+        console.error('Failed to end journey:', response.statusText);
+        setError('Failed to end journey tracking');
+      }
+    } catch (error) {
+      console.error('Error ending journey:', error);
+      setError('Error ending journey tracking');
+    }
+  };
+
+  const sendLocationData = () => {
+    if (!navigator.geolocation) {
+      console.error('Geolocation is not supported by this browser');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const aimlApiUrl = import.meta.env.VITE_AIML_API_URL || 'http://127.0.0.1:8000';
+          
+          const locationData = {
+            user_id: userId,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            timestamp: new Date().toISOString(),
+            accuracy: position.coords.accuracy,
+            speed: position.coords.speed,
+            heading: position.coords.heading,
+          };
+
+          const response = await fetch(`${aimlApiUrl}/api/v1/track_location/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(locationData),
+          });
+
+          if (!response.ok) {
+            console.error('Failed to send location data:', response.statusText);
+          } else {
+            // Refresh safety score after location update (with a small delay for processing)
+            setTimeout(() => {
+              fetchSafetyScore();
+            }, 2000);
+          }
+        } catch (error) {
+          console.error('Error sending location data:', error);
+        }
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  // Clean up interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (trackingInterval) {
+        clearInterval(trackingInterval);
+      }
+    };
+  }, [trackingInterval]);
   
   return (
     <main className="container mx-auto py-8 space-y-6">
@@ -225,6 +390,87 @@ export default function TouristDashboard() {
         </motion.div>
       )}
       
+      {/* Journey Tracking Card */}
+      {profile && profile.verificationStatus === 'verified' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6"
+        >
+          <Card className="border-blue-200 dark:border-blue-800">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Journey Tracking</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {isTracking ? 'AI-powered safety monitoring active' : 'Start tracking for real-time safety monitoring'}
+                    </p>
+                  </div>
+                </div>
+                <Badge className={isTracking ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-400'}>
+                  {isTracking ? (
+                    <>
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+                      Active
+                    </>
+                  ) : (
+                    'Inactive'
+                  )}
+                </Badge>
+              </div>
+            </CardHeader>
+            
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Our AI system monitors your location patterns to detect anomalies and ensure your safety during your journey.
+                </p>
+                
+                <div className="flex gap-3">
+                  {!isTracking ? (
+                    <Button 
+                      onClick={handleStartJourney}
+                      className="flex-1"
+                      disabled={loading}
+                    >
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Start Journey
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={handleEndJourney}
+                      variant="destructive"
+                      className="flex-1"
+                      disabled={loading}
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      End Journey
+                    </Button>
+                  )}
+                </div>
+                
+                {isTracking && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                    <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                      <span className="text-sm font-medium">Location tracking active</span>
+                    </div>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      Your location is being monitored every 10 seconds for safety analysis
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+      
       {/* Main Dashboard Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
         <motion.div 
@@ -233,7 +479,38 @@ export default function TouristDashboard() {
           transition={{ delay: 0.1 }}
           className="space-y-6"
         >
-          <SafetyScoreCard score={78} />
+          {isLoadingScore ? (
+            <Card className="p-6">
+              <div className="text-center">
+                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                <p className="text-sm text-muted-foreground">Loading Safety Score...</p>
+              </div>
+            </Card>
+          ) : (
+            <>
+              <SafetyScoreCard score={safetyScore} />
+              {scoreFactors.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Safety Factors
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {scoreFactors.map((factor, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <span className="text-muted-foreground">{factor}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
           <PanicButton userId={userId} />
           
           {/* Quick Stats */}

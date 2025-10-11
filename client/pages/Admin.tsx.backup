@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { formatDateDDMMYYYY } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import AdminTouristDetail from "@/components/AdminTouristDetail";
-import { io } from "socket.io-client";
+import io, { Socket } from "socket.io-client";
 import {
   Table,
   TableHeader,
@@ -29,7 +29,24 @@ import {
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { IdCard, CheckCircle, XCircle, Clock, FileText, Home, Users, Settings } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { IdCard, CheckCircle, XCircle, Clock, FileText, Home, Users, Settings, AlertTriangle, Bell } from "lucide-react";
+
+// Anomaly Alert type definition
+interface AnomalyAlert {
+  alertId: string;
+  userId: string;
+  touristName: string;
+  type: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  severity: "low" | "medium" | "high";
+  timestamp: string;
+  details: string;
+  status: "new" | "acknowledged" | "resolved";
+}
 
 type Applicant = {
   _id: string;
@@ -49,6 +66,9 @@ export default function Admin() {
   const [totalPending, setTotalPending] = useState<number | null>(null);
   const [applicationsToday, setApplicationsToday] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [anomalyAlerts, setAnomalyAlerts] = useState<AnomalyAlert[]>([]);
+  const [newAlertsCount, setNewAlertsCount] = useState(0);
+  const socketRef = useRef<Socket | null>(null);
   const [page, setPage] = useState(1);
   const perPage = 10;
   const [selected, setSelected] = useState<string | null>(null);
@@ -57,9 +77,24 @@ export default function Admin() {
   const [statusFilter, setStatusFilter] = useState<
     "pending" | "verified" | "rejected" | "archived" | "all"
   >("pending");
-  
-  // Anomaly alerts state
-  const [anomalyAlerts, setAnomalyAlerts] = useState<any[]>([]);
+
+  export default function Admin() {
+  const [items, setItems] = useState<Applicant[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPending, setTotalPending] = useState<number | null>(null);
+  const [applicationsToday, setApplicationsToday] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "verified" | "rejected" | "archived">("all");
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const perPage = 10;
+
+  // Socket.IO and anomaly alert state
+  const socketRef = useRef<Socket | null>(null);
+  const [anomalyAlerts, setAnomalyAlerts] = useState<AnomalyAlert[]>([]);
+  const [newAlertsCount, setNewAlertsCount] = useState(0);
 
   // load data; allow optional overrides so we can trigger a search immediately
   async function load(opts?: { page?: number; status?: typeof statusFilter; query?: string }) {
@@ -144,30 +179,45 @@ export default function Admin() {
     loadMetrics();
   }, []);
 
+  // Socket.IO connection for real-time anomaly alerts
   useEffect(() => {
-    // Setup Socket.IO connection for real-time anomaly alerts
-    const socket = io();
-    
-    socket.on('new-anomaly-alert', (alertData) => {
-      console.log('Received anomaly alert:', alertData);
-      setAnomalyAlerts(prev => [alertData, ...prev.slice(0, 9)]); // Keep last 10 alerts
+    // Connect to Socket.IO server
+    const socket = io('http://localhost:3000');
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('🔗 Admin dashboard connected to Socket.IO server');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('🔌 Admin dashboard disconnected from Socket.IO server');
+    });
+
+    // Listen for new anomaly alerts
+    socket.on('new-anomaly-alert', (alertData: AnomalyAlert) => {
+      console.log('🚨 New anomaly alert received:', alertData);
       
-      // Optional: Show notification
-      if (Notification && Notification.permission === 'granted') {
-        new Notification(`Anomaly Alert: ${alertData.name}`, {
-          body: `Anomaly detected with score ${alertData.anomalyScore.toFixed(2)}`,
+      setAnomalyAlerts(prev => [alertData, ...prev.slice(0, 9)]); // Keep last 10 alerts
+      setNewAlertsCount(prev => prev + 1);
+      
+      // Show browser notification if permission granted
+      if (Notification.permission === 'granted') {
+        new Notification('🚨 Anomaly Alert', {
+          body: `${alertData.touristName}: ${alertData.details}`,
           icon: '/favicon.ico'
         });
       }
     });
 
     // Request notification permission on mount
-    if (Notification && Notification.permission === 'default') {
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
       Notification.requestPermission();
     }
 
+    // Cleanup on unmount
     return () => {
       socket.disconnect();
+      socketRef.current = null;
     };
   }, []);
 
@@ -186,11 +236,21 @@ export default function Admin() {
     if (r.ok) await load();
   }
 
+  function dismissAlert(alertId: string) {
+    setAnomalyAlerts(prev => prev.filter(alert => alert.alertId !== alertId));
+    setNewAlertsCount(prev => Math.max(0, prev - 1));
+  }
+
+  function clearAllAlerts() {
+    setAnomalyAlerts([]);
+    setNewAlertsCount(0);
+  }
+
   return (
     <>
       <main className="container mx-auto py-8 px-6">
           <div className="w-full">
-              <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Total Pending</CardTitle>
@@ -215,76 +275,66 @@ export default function Admin() {
                     <div className="text-2xl font-semibold">-</div>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      Anomaly Alerts
-                      {anomalyAlerts.length > 0 && (
-                        <Badge variant="destructive" className="animate-pulse">
-                          {anomalyAlerts.length}
-                        </Badge>
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-semibold">{anomalyAlerts.length}</div>
-                    {anomalyAlerts.length > 0 && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Latest: {new Date(anomalyAlerts[0].timestamp).toLocaleTimeString()}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
               </div>
 
               {/* Anomaly Alerts Section */}
               {anomalyAlerts.length > 0 && (
                 <div className="mb-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        🚨 Recent Anomaly Alerts
-                        <Badge variant="outline">{anomalyAlerts.length} alerts</Badge>
+                  <Card className="border-red-200 dark:border-red-800">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-lg font-medium text-red-600 dark:text-red-400 flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5" />
+                        Anomaly Alerts
+                        {newAlertsCount > 0 && (
+                          <Badge variant="destructive" className="ml-2">
+                            {newAlertsCount} new
+                          </Badge>
+                        )}
                       </CardTitle>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={clearAllAlerts}
+                        className="text-xs"
+                      >
+                        Clear All
+                      </Button>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3 max-h-64 overflow-y-auto">
-                        {anomalyAlerts.slice(0, 5).map((alert, index) => (
-                          <div key={`${alert.alertId}-${index}`} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant={alert.severity === 'high' ? 'destructive' : alert.severity === 'medium' ? 'default' : 'secondary'}
-                                  className="text-xs"
+                      <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {anomalyAlerts.map(alert => (
+                          <Alert key={alert.alertId} className="border-orange-200 dark:border-orange-800">
+                            <Bell className="h-4 w-4" />
+                            <AlertDescription>
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium text-sm">{alert.touristName}</span>
+                                    <Badge variant={alert.severity === 'high' ? 'destructive' : 'secondary'} className="text-xs">
+                                      {alert.severity}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(alert.timestamp).toLocaleTimeString()}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mb-1">{alert.details}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Location: {alert.location.lat.toFixed(4)}, {alert.location.lng.toFixed(4)}
+                                  </p>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => dismissAlert(alert.alertId)}
+                                  className="ml-2 h-6 w-6 p-0"
                                 >
-                                  {alert.severity?.toUpperCase() || 'UNKNOWN'}
-                                </Badge>
-                                <span className="font-medium">{alert.name}</span>
+                                  ×
+                                </Button>
                               </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Score: {alert.anomalyScore?.toFixed(3) || 'N/A'} | 
-                                Location: {alert.location?.lat?.toFixed(4) || 'N/A'}, {alert.location?.lng?.toFixed(4) || 'N/A'}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(alert.timestamp).toLocaleString()}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline" onClick={() => {
-                                // Navigate to user location or show details
-                                console.log('View alert details:', alert);
-                              }}>
-                                View
-                              </Button>
-                            </div>
-                          </div>
+                            </AlertDescription>
+                          </Alert>
                         ))}
                       </div>
-                      {anomalyAlerts.length > 5 && (
-                        <p className="text-xs text-muted-foreground mt-3 text-center">
-                          Showing 5 of {anomalyAlerts.length} alerts
-                        </p>
-                      )}
                     </CardContent>
                   </Card>
                 </div>

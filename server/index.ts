@@ -290,6 +290,50 @@ export function createServer() {
     res.json({ success: true, alertId: id });
   });
 
+  // Anomaly alert webhook endpoint for Django AI service
+  app.post("/api/v1/alerts/anomaly", (req, res) => {
+    const { user_id, anomaly_score, location, timestamp, alert_type } = req.body ?? {};
+    
+    if (!user_id || !anomaly_score || !location) {
+      return res.status(400).json({ 
+        error: "Missing required fields: user_id, anomaly_score, location" 
+      });
+    }
+
+    const id = `anomaly_${Date.now()}`;
+    const t = tourists.find((x) => String(x._id) === String(user_id));
+    
+    const payload: Alert = {
+      alertId: id,
+      userId: user_id,
+      type: alert_type ?? "anomaly",
+      location: location,
+      severity: anomaly_score > 0.8 ? "high" : anomaly_score > 0.6 ? "medium" : "low",
+      status: "active",
+      timestamp: timestamp ?? new Date().toISOString(),
+    };
+    
+    alerts.push(payload);
+
+    // Broadcast via Socket.IO
+    const io = (req.app as any).get("io");
+    if (io) {
+      io.emit("new-anomaly-alert", {
+        alertId: payload.alertId,
+        userId: payload.userId,
+        name: t?.name ?? "Unknown Tourist",
+        location: payload.location,
+        severity: payload.severity,
+        anomalyScore: anomaly_score,
+        alertType: alert_type ?? "anomaly",
+        timestamp: payload.timestamp,
+      });
+    }
+
+    console.log(`Anomaly alert received for user ${user_id}: score=${anomaly_score}, severity=${payload.severity}`);
+    res.json({ success: true, alertId: id, severity: payload.severity });
+  });
+
   // Admin verification APIs
   app.get("/api/admin/pending-verifications", (_req, res) => {
     // support optional status filter via query param ?status=pending|verified|rejected|archived|all
@@ -504,7 +548,7 @@ export function createServer() {
 
   // Bridge proxies
   const BLOCKCHAIN_API_URL = process.env.BLOCKCHAIN_API_URL || "http://localhost:5002";
-  const AIML_API_URL = process.env.AIML_API_URL || "http://localhost:5003";
+  const AIML_API_URL = process.env.AIML_API_URL || "http://127.0.0.1:8000";
 
   // Blockchain ID creation endpoint
   app.post("/api/blockchain/create-id", async (req, res) => {
@@ -676,9 +720,31 @@ export function createServer() {
     res.json(response);
   });
 
+  // Support both GET and POST for safety score
+  app.get("/api/bridge/aiml/safetyScore", async (req, res) => {
+    try {
+      const user_id = req.query.user_id;
+      if (!user_id) {
+        return res.status(400).json({ error: "user_id query parameter is required" });
+      }
+      
+      const url = new URL(`${AIML_API_URL}/api/v1/safety_score/`);
+      url.searchParams.append('user_id', user_id as string);
+      
+      const r = await fetch(url.toString(), {
+        method: "GET",
+        headers: { "content-type": "application/json" },
+      });
+      const json = await r.json();
+      res.status(r.status).json(json);
+    } catch (e: any) {
+      res.status(502).json({ error: "upstream_unreachable", details: e?.message });
+    }
+  });
+
   app.post("/api/bridge/aiml/safetyScore", async (req, res) => {
     try {
-      const r = await fetch(`${AIML_API_URL}/safetyScore`, {
+      const r = await fetch(`${AIML_API_URL}/api/v1/safety_score/`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(req.body ?? {}),

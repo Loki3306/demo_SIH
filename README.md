@@ -25,27 +25,82 @@ Development phase only. No production configs. Do not upload real KYC data.
 
 ## Environment (dev)
 Create .env in project root:
+```
 PORT=8080
 BLOCKCHAIN_API_URL=http://localhost:5002
 AIML_API_URL=http://localhost:5003
+VITE_AIML_API_URL=http://127.0.0.1:8000
+EXPRESS_WEBHOOK_URL=http://localhost:5001/api/v1/alerts/anomaly
+HEALTH_CHECK_ENABLED=true
+FALLBACK_MODE_ENABLED=true
+PING_MESSAGE=ping
+```
 
 ## Seed Data
 Sample JSON files are in `seed_data/` (tourists, police, alerts). The API loads `seed_data/tourists.json` for basic responses.
+
+## Real-Time AI Anomaly Detection Flow
+
+### Full-Stack Integration
+The system now features end-to-end AI-powered location anomaly detection:
+
+1. **Tourist starts journey** on Tourist Dashboard → sends authenticated request to Django AI service
+2. **Location tracking** every 10 seconds → Django processes with ML models for anomaly detection  
+3. **Anomaly alerts** → Django webhook calls Express server → Socket.IO broadcasts to Admin Dashboard
+
+### Setup Steps
+1. **Install Django AI service dependencies:**
+   ```bash
+   cd aiml
+   pip install -r requirements.txt
+   python manage.py migrate
+   ```
+
+2. **Start all services:**
+   ```bash
+   # Terminal 1: Main app (React + Express)
+   pnpm dev
+   
+   # Terminal 2: Django AI service
+   cd aiml && python manage.py runserver 8000
+   
+   # Terminal 3: Optional blockchain service
+   pnpm dev:blockchain
+   ```
+
+### Authentication & Security
+- **Authentication**: Currently disabled for development/testing (can be re-enabled in Django views)
+- **CORS Configuration**: Django allows requests from React dev server (localhost:5173)
+- **User Creation**: Users are automatically created when anomalies are detected
+
+### Testing the Flow
+1. **Tourist Journey:**
+   - Navigate to `/tourist/dashboard`
+   - Click "Start Journey" (requires verified Digital ID status)
+   - Location tracking begins automatically
+   - Click "End Journey" to stop
+
+2. **Admin Monitoring:**
+   - Open `/admin` in another tab
+   - Watch real-time anomaly alerts appear when ML detects unusual patterns
+   - Notifications and dashboard cards update automatically
+
+### Socket.IO Events
+```javascript
+// Panic alert (existing)
+socket.on('panic_alert', {alertId, userId, name, location, severity, timestamp});
+
+// New anomaly alert
+socket.on('new-anomaly-alert', {
+  alertId, userId, name, location, severity, 
+  anomalyScore, alertType, timestamp
+});
+```
 
 ## Test Panic Flow
 - Open Tourist Dashboard: /tourist/dashboard
 - Click Panic — server stores alert and emits `panic_alert` via Socket.IO
 - Open Police Dashboard: /police/dashboard to see live alerts
-
-Socket.IO event: `panic_alert` payload
-{
-  "alertId": "a_...",
-  "userId": "t123",
-  "name": "Alice Kumar",
-  "location": { "lat": 26.8467, "lng": 80.9462 },
-  "severity": "high",
-  "timestamp": "..."
-}
 
 ## Landing Page
 - Professional hero with vector collage of Indian heritage monuments (parallax)
